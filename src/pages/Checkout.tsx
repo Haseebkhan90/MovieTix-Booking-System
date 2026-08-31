@@ -14,7 +14,7 @@ const PROMO = 'BOOKNOW10';
 
 export const Checkout = () => {
   const navigate = useNavigate();
-  const draft = loadDraft();
+  const [draft] = useState(() => loadDraft());
   const { addTicket } = useTicketContext();
   const { markSeatsBooked } = useSeatContext();
   const { city } = useCity();
