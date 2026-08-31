@@ -55,14 +55,13 @@ export const getDemoBookedIds = (
   time: string
 ) => {
   const booked = new Set<string>();
-  ROW_CONFIG.forEach(({ row, category }, rowIndex) => {
+  ROW_CONFIG.forEach(({ row, category }) => {
     for (let n = 1; n <= SEATS_PER_ROW; n += 1) {
       const id = seatId(movieId, cinemaId, date, time, row, n);
       const seed = hashString(`${id}-${category}`);
-      if (seed % 10 < 3) {
+      if (seed % 10 < 2) {
         booked.add(id);
       }
-      if (rowIndex === 0 && n % 5 === 0) booked.add(id);
     }
   });
   return booked;

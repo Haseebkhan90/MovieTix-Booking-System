@@ -16,11 +16,13 @@ interface SeatSelectorProps {
 }
 
 const seatTone = (seat: Seat) => {
-  if (seat.isBooked) return 'border-zinc-700 bg-zinc-800 text-zinc-600';
+  if (seat.isBooked) return 'border-transparent bg-zinc-800 text-transparent';
   if (seat.isSelected) return 'border-cinema-accent bg-cinema-accent text-white';
-  if (seat.category === 'recliner') return 'border-amber-400/40 bg-amber-500/20 text-amber-100 hover:bg-amber-400/40';
-  if (seat.category === 'premium') return 'border-sky-400/40 bg-sky-500/15 text-sky-100 hover:bg-sky-400/30';
-  return 'border-zinc-500 bg-zinc-700/40 text-zinc-200 hover:bg-zinc-500';
+  if (seat.category === 'recliner')
+    return 'border-amber-400 bg-transparent text-amber-100 hover:bg-amber-400/25';
+  if (seat.category === 'premium')
+    return 'border-sky-400 bg-transparent text-sky-100 hover:bg-sky-400/25';
+  return 'border-zinc-300 bg-transparent text-zinc-200 hover:bg-white/10';
 };
 
 export const SeatSelector: React.FC<SeatSelectorProps> = ({ movieId, cinemaId, date, time }) => {
@@ -83,19 +85,19 @@ export const SeatSelector: React.FC<SeatSelectorProps> = ({ movieId, cinemaId, d
 
         <div className="mt-8 flex flex-wrap items-center justify-center gap-5 text-xs text-zinc-400">
           <span className="flex items-center gap-2">
-            <span className="seat-btn border-zinc-500 bg-zinc-700/40" /> Available
+            <span className="seat-btn border-zinc-300 bg-transparent" /> Available
           </span>
           <span className="flex items-center gap-2">
             <span className="seat-btn border-cinema-accent bg-cinema-accent" /> Selected
           </span>
           <span className="flex items-center gap-2">
-            <span className="seat-btn border-zinc-700 bg-zinc-800" /> Sold
+            <span className="seat-btn border-transparent bg-zinc-800" /> Sold
           </span>
           <span className="flex items-center gap-2">
-            <span className="seat-btn border-sky-400/40 bg-sky-500/15" /> Prime
+            <span className="seat-btn border-sky-400 bg-transparent" /> Prime
           </span>
           <span className="flex items-center gap-2">
-            <span className="seat-btn border-amber-400/40 bg-amber-500/20" /> Recliner
+            <span className="seat-btn border-amber-400 bg-transparent" /> Recliner
           </span>
         </div>
       </div>

@@ -38,10 +38,16 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ movies }) => {
           }`}
         />
       ))}
-      <div className="absolute inset-0 bg-hero-fade" />
-      <div className="absolute inset-0 bg-gradient-to-t from-cinema-bg via-cinema-bg/40 to-black/20" />
+      <div className="absolute inset-0 bg-gradient-to-r from-cinema-bg via-cinema-bg/70 to-cinema-bg/25" />
+      <div className="absolute inset-0 bg-gradient-to-t from-cinema-bg via-transparent to-black/30" />
 
-      <div className="relative mx-auto flex h-full max-w-7xl flex-col justify-end px-4 pb-12 sm:px-6">
+      <div className="relative mx-auto flex h-full max-w-7xl items-end gap-8 px-4 pb-12 sm:px-6">
+        <img
+          src={current.imageUrl}
+          alt={current.title}
+          className="hidden h-72 w-48 shrink-0 rounded-2xl object-cover shadow-2xl ring-1 ring-white/10 md:block"
+        />
+        <div className="min-w-0 pb-2">
         <p className="mb-3 text-xs font-semibold uppercase tracking-[0.25em] text-cinema-accent">Now in cinemas</p>
         <h1 className="max-w-2xl text-4xl font-extrabold leading-tight sm:text-6xl">{current.title}</h1>
         <div className="mt-4 flex flex-wrap items-center gap-3 text-sm text-zinc-300">
@@ -79,6 +85,7 @@ export const HeroBanner: React.FC<HeroBannerProps> = ({ movies }) => {
               className={`h-1.5 rounded-full transition-all ${i === index ? 'w-8 bg-cinema-accent' : 'w-3 bg-white/30'}`}
             />
           ))}
+        </div>
         </div>
       </div>
 

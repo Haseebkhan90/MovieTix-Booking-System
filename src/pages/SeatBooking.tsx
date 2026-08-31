@@ -94,8 +94,8 @@ export const SeatBooking = () => {
               </>
             )}
           </div>
-          <button type="button" disabled={selectedSeats.length === 0} onClick={proceed} className="btn-primary">
-            Pay {formatINR(subtotal)}
+          <button type="button" disabled={selectedSeats.length === 0} onClick={proceed} className="btn-primary min-w-40">
+            {selectedSeats.length === 0 ? 'Select seats' : `Pay ${formatINR(subtotal)}`}
           </button>
         </div>
       </div>
