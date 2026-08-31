@@ -1,7 +1,9 @@
 import React from 'react';
-import { X, MapPin, Calendar, Clock, Users } from 'lucide-react';
+import { Calendar, Clock, MapPin, Users, X } from 'lucide-react';
 import { Ticket } from '../types';
-import { movies } from '../data/movies';
+import { getMovieById } from '../data/movies';
+import { getCinemaById } from '../data/cinemas';
+import { formatINR, formatShowDate } from '../utils/booking';
 
 interface TicketDetailsProps {
   ticket: Ticket;
@@ -9,99 +11,94 @@ interface TicketDetailsProps {
 }
 
 export const TicketDetails: React.FC<TicketDetailsProps> = ({ ticket, onClose }) => {
-  const movie = movies.find(m => m.id === ticket.movieId);
+  const movie = getMovieById(ticket.movieId);
+  const cinema = getCinemaById(ticket.cinemaId);
   if (!movie) return null;
 
+  const qrUrl = `https://api.qrserver.com/v1/create-qr-code/?size=180x180&data=${encodeURIComponent(
+    `MOVIETIX|${ticket.id}|${movie.title}|${ticket.seats.map((s) => s.row + s.number).join(',')}`
+  )}`;
+
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center p-4 z-50">
-      <div className="bg-white rounded-lg shadow-xl max-w-2xl w-full max-h-[90vh] overflow-y-auto">
-        <div className="relative">
-          <img 
-            src={movie.imageUrl} 
-            alt={movie.title}
-            className="w-full h-48 object-cover"
-          />
-          <button
-            onClick={onClose}
-            className="absolute top-4 right-4 p-2 bg-black bg-opacity-50 rounded-full text-white hover:bg-opacity-70 transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
-        </div>
+    <div className="fixed inset-0 z-50 flex items-center justify-center bg-black/70 p-4" onClick={onClose}>
+      <div
+        className="card-surface relative max-h-[90vh] w-full max-w-2xl overflow-y-auto"
+        onClick={(e) => e.stopPropagation()}
+      >
+        <img src={movie.backdropUrl} alt="" className="h-40 w-full object-cover" />
+        <button
+          type="button"
+          onClick={onClose}
+          className="absolute right-4 top-4 rounded-full bg-black/60 p-2 text-white"
+          aria-label="Close ticket"
+        >
+          <X className="h-5 w-5" />
+        </button>
 
-        <div className="p-6">
-          <h2 className="text-2xl font-bold mb-4">{movie.title}</h2>
+        <div className="grid gap-6 p-6 md:grid-cols-[1fr_180px]">
+          <div>
+            <p className="text-xs uppercase tracking-widest text-cinema-accent">M-Ticket</p>
+            <h2 className="mt-1 text-2xl font-bold">{movie.title}</h2>
+            <p className="text-sm text-zinc-400">
+              {movie.certification} • {movie.language} • {movie.duration}
+            </p>
 
-          <div className="space-y-4">
-            <div className="flex items-start space-x-3">
-              <Calendar className="w-5 h-5 text-gray-500 mt-1" />
-              <div>
-                <p className="font-medium">Show Date & Time</p>
-                <p className="text-gray-600">
-                  {new Date(ticket.showtime).toLocaleDateString('en-US', {
-                    weekday: 'long',
-                    year: 'numeric',
-                    month: 'long',
-                    day: 'numeric'
-                  })}
-                </p>
-                <p className="text-gray-600">
-                  {new Date(ticket.showtime).toLocaleTimeString('en-US', {
-                    hour: '2-digit',
-                    minute: '2-digit'
-                  })}
-                </p>
+            <div className="mt-5 space-y-4 text-sm">
+              <div className="flex gap-3">
+                <Calendar className="mt-0.5 h-4 w-4 text-cinema-accent" />
+                <div>
+                  <p className="font-medium">Show</p>
+                  <p className="text-zinc-400">
+                    {formatShowDate(ticket.showDate)} • {ticket.showtime}
+                  </p>
+                </div>
               </div>
-            </div>
-
-            <div className="flex items-start space-x-3">
-              <MapPin className="w-5 h-5 text-gray-500 mt-1" />
-              <div>
-                <p className="font-medium">Theater</p>
-                <p className="text-gray-600">Screen 1, MovieTix Cinemas</p>
+              <div className="flex gap-3">
+                <MapPin className="mt-0.5 h-4 w-4 text-cinema-accent" />
+                <div>
+                  <p className="font-medium">{cinema?.name ?? 'Cinema'}</p>
+                  <p className="text-zinc-400">
+                    {cinema?.mall}, {ticket.city}
+                  </p>
+                </div>
               </div>
-            </div>
-
-            <div className="flex items-start space-x-3">
-              <Users className="w-5 h-5 text-gray-500 mt-1" />
-              <div>
-                <p className="font-medium">Seats</p>
-                <div className="flex flex-wrap gap-2 mt-1">
-                  {ticket.seats.map(seat => (
-                    <span
-                      key={seat.id}
-                      className="px-3 py-1 bg-blue-100 text-blue-800 rounded-full text-sm"
-                    >
-                      {seat.row}{seat.number}
-                    </span>
-                  ))}
+              <div className="flex gap-3">
+                <Users className="mt-0.5 h-4 w-4 text-cinema-accent" />
+                <div>
+                  <p className="font-medium">Seats</p>
+                  <div className="mt-1 flex flex-wrap gap-2">
+                    {ticket.seats.map((seat) => (
+                      <span key={seat.id} className="rounded-full bg-cinema-accent/15 px-3 py-1 text-cinema-accent">
+                        {seat.row}
+                        {seat.number}
+                      </span>
+                    ))}
+                  </div>
+                </div>
+              </div>
+              <div className="flex gap-3">
+                <Clock className="mt-0.5 h-4 w-4 text-cinema-accent" />
+                <div>
+                  <p className="font-medium">Booked on</p>
+                  <p className="text-zinc-400">{new Date(ticket.purchaseDate).toLocaleString('en-IN')}</p>
                 </div>
               </div>
             </div>
-
-            <div className="flex items-start space-x-3">
-              <Clock className="w-5 h-5 text-gray-500 mt-1" />
-              <div>
-                <p className="font-medium">Duration</p>
-                <p className="text-gray-600">{movie.duration}</p>
-              </div>
-            </div>
           </div>
 
-          <div className="mt-6 pt-6 border-t">
-            <div className="flex justify-between items-center">
-              <div>
-                <p className="text-sm text-gray-500">Total Amount Paid</p>
-                <p className="text-2xl font-bold text-green-600">
-                  ${ticket.totalAmount.toFixed(2)}
-                </p>
-              </div>
-              <div className="text-right">
-                <p className="text-sm text-gray-500">Booking ID</p>
-                <p className="text-sm font-medium">{ticket.id}</p>
-              </div>
-            </div>
+          <div className="flex flex-col items-center justify-center rounded-2xl bg-white p-4 text-center text-zinc-900">
+            <img src={qrUrl} alt="Ticket QR code" className="h-36 w-36" />
+            <p className="mt-2 text-[11px] font-semibold uppercase tracking-wide">Scan at gate</p>
+            <p className="mt-1 break-all text-[10px] text-zinc-500">{ticket.id.slice(0, 8).toUpperCase()}</p>
           </div>
+        </div>
+
+        <div className="flex items-center justify-between border-t border-cinema-border px-6 py-4">
+          <div>
+            <p className="text-xs text-zinc-500">Amount paid</p>
+            <p className="text-2xl font-bold text-emerald-400">{formatINR(ticket.totalAmount)}</p>
+          </div>
+          <p className="text-xs text-zinc-500">Booking ID {ticket.id.slice(0, 8).toUpperCase()}</p>
         </div>
       </div>
     </div>
