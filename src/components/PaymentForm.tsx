@@ -1,7 +1,6 @@
-import React, { useState } from 'react';
-import { loadStripe } from '@stripe/stripe-js';
-import { STRIPE_PUBLIC_KEY } from '../config/stripe';
+import React, { FormEvent, useState } from 'react';
 import { CreditCard, Lock } from 'lucide-react';
+import { formatINR } from '../utils/booking';
 
 interface PaymentFormProps {
   amount: number;
@@ -9,143 +8,140 @@ interface PaymentFormProps {
   onError: (error: string) => void;
 }
 
+const luhnCheck = (num: string) => {
+  const digits = num.replace(/\s/g, '');
+  if (digits.length < 13) return false;
+  let sum = 0;
+  let alt = false;
+  for (let i = digits.length - 1; i >= 0; i -= 1) {
+    let n = Number(digits[i]);
+    if (alt) {
+      n *= 2;
+      if (n > 9) n -= 9;
+    }
+    sum += n;
+    alt = !alt;
+  }
+  return sum % 10 === 0;
+};
+
 export const PaymentForm: React.FC<PaymentFormProps> = ({ amount, onSuccess, onError }) => {
   const [isProcessing, setIsProcessing] = useState(false);
+  const [name, setName] = useState('');
   const [cardNumber, setCardNumber] = useState('');
   const [expiry, setExpiry] = useState('');
   const [cvc, setCvc] = useState('');
 
-  const handleSubmit = async (e: React.FormEvent) => {
-    e.preventDefault();
-    setIsProcessing(true);
-
-    try {
-      const stripe = await loadStripe(STRIPE_PUBLIC_KEY);
-      if (!stripe) throw new Error('Stripe failed to initialize');
-
-      // In a real application, you would:
-      // 1. Send payment details to your server
-      // 2. Create a payment intent
-      // 3. Confirm the payment with Stripe
-      // For demo purposes, we'll simulate a successful payment
-      setTimeout(() => {
-        setIsProcessing(false);
-        onSuccess();
-      }, 2000);
-    } catch (error) {
-      setIsProcessing(false);
-      onError(error instanceof Error ? error.message : 'Payment failed');
-    }
-  };
-
   const formatCardNumber = (value: string) => {
-    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-    const matches = v.match(/\d{4,16}/g);
-    const match = (matches && matches[0]) || '';
-    const parts = [];
-
-    for (let i = 0, len = match.length; i < len; i += 4) {
-      parts.push(match.substring(i, i + 4));
-    }
-
-    if (parts.length) {
-      return parts.join(' ');
-    } else {
-      return value;
-    }
+    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '').slice(0, 16);
+    return v.replace(/(.{4})/g, '$1 ').trim();
   };
 
   const formatExpiry = (value: string) => {
-    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '');
-    if (v.length >= 2) {
-      return `${v.substring(0, 2)}/${v.substring(2, 4)}`;
-    }
+    const v = value.replace(/\s+/g, '').replace(/[^0-9]/gi, '').slice(0, 4);
+    if (v.length >= 2) return `${v.substring(0, 2)}/${v.substring(2, 4)}`;
     return v;
   };
 
+  const handleSubmit = (e: FormEvent) => {
+    e.preventDefault();
+    const digits = cardNumber.replace(/\s/g, '');
+    if (!luhnCheck(digits)) {
+      onError('Enter a valid card number. Use 4242 4242 4242 4242 for this demo.');
+      return;
+    }
+    const [mm, yy] = expiry.split('/');
+    const month = Number(mm);
+    if (!month || month < 1 || month > 12 || !yy) {
+      onError('Enter a valid expiry date.');
+      return;
+    }
+    if (cvc.length < 3) {
+      onError('Enter a valid CVC.');
+      return;
+    }
+
+    setIsProcessing(true);
+    window.setTimeout(() => {
+      setIsProcessing(false);
+      onSuccess();
+    }, 1400);
+  };
+
   return (
-    <form onSubmit={handleSubmit} className="space-y-6">
-      <div className="bg-blue-50 p-4 rounded-lg flex items-center space-x-2">
-        <Lock className="w-5 h-5 text-blue-500" />
-        <p className="text-sm text-blue-700">
-          Your payment information is secured with SSL encryption
-        </p>
+    <form onSubmit={handleSubmit} className="space-y-5">
+      <div className="flex items-center gap-2 rounded-xl border border-cinema-accent/30 bg-cinema-accent/10 p-3 text-sm text-rose-100">
+        <Lock className="h-4 w-4" />
+        Demo checkout — no real charge. Test card: 4242 4242 4242 4242
       </div>
 
-      <div className="space-y-4">
+      <div>
+        <label htmlFor="name" className="mb-1 block text-sm text-zinc-300">
+          Name on card
+        </label>
+        <input
+          id="name"
+          value={name}
+          onChange={(e) => setName(e.target.value)}
+          className="input-field"
+          placeholder="Guest User"
+          required
+        />
+      </div>
+
+      <div>
+        <label htmlFor="cardNumber" className="mb-1 block text-sm text-zinc-300">
+          Card number
+        </label>
+        <div className="relative">
+          <input
+            id="cardNumber"
+            value={cardNumber}
+            onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
+            maxLength={19}
+            placeholder="4242 4242 4242 4242"
+            className="input-field pr-10"
+            inputMode="numeric"
+            required
+          />
+          <CreditCard className="absolute right-3 top-2.5 h-5 w-5 text-zinc-500" />
+        </div>
+      </div>
+
+      <div className="grid grid-cols-2 gap-4">
         <div>
-          <label htmlFor="cardNumber" className="block text-sm font-medium text-gray-700">
-            Card Number
+          <label htmlFor="expiry" className="mb-1 block text-sm text-zinc-300">
+            Expiry
           </label>
-          <div className="mt-1 relative">
-            <input
-              type="text"
-              id="cardNumber"
-              value={cardNumber}
-              onChange={(e) => setCardNumber(formatCardNumber(e.target.value))}
-              maxLength={19}
-              placeholder="4242 4242 4242 4242"
-              className="block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-              required
-            />
-            <CreditCard className="absolute right-3 top-2.5 h-5 w-5 text-gray-400" />
-          </div>
+          <input
+            id="expiry"
+            value={expiry}
+            onChange={(e) => setExpiry(formatExpiry(e.target.value))}
+            maxLength={5}
+            placeholder="MM/YY"
+            className="input-field"
+            required
+          />
         </div>
-
-        <div className="grid grid-cols-2 gap-4">
-          <div>
-            <label htmlFor="expiry" className="block text-sm font-medium text-gray-700">
-              Expiry Date
-            </label>
-            <input
-              type="text"
-              id="expiry"
-              value={expiry}
-              onChange={(e) => setExpiry(formatExpiry(e.target.value))}
-              maxLength={5}
-              placeholder="MM/YY"
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-              required
-            />
-          </div>
-
-          <div>
-            <label htmlFor="cvc" className="block text-sm font-medium text-gray-700">
-              CVC
-            </label>
-            <input
-              type="text"
-              id="cvc"
-              value={cvc}
-              onChange={(e) => setCvc(e.target.value.replace(/\D/g, '').slice(0, 3))}
-              maxLength={3}
-              placeholder="123"
-              className="mt-1 block w-full px-3 py-2 border border-gray-300 rounded-md shadow-sm focus:ring-blue-500 focus:border-blue-500"
-              required
-            />
-          </div>
+        <div>
+          <label htmlFor="cvc" className="mb-1 block text-sm text-zinc-300">
+            CVC
+          </label>
+          <input
+            id="cvc"
+            value={cvc}
+            onChange={(e) => setCvc(e.target.value.replace(/\D/g, '').slice(0, 3))}
+            maxLength={3}
+            placeholder="123"
+            className="input-field"
+            required
+          />
         </div>
       </div>
 
-      <div className="mt-6">
-        <button
-          type="submit"
-          disabled={isProcessing}
-          className="w-full flex justify-center py-3 px-4 border border-transparent rounded-md shadow-sm text-white bg-blue-600 hover:bg-blue-700 focus:outline-none focus:ring-2 focus:ring-offset-2 focus:ring-blue-500 disabled:bg-gray-400 disabled:cursor-not-allowed"
-        >
-          {isProcessing ? (
-            <span className="flex items-center">
-              <svg className="animate-spin -ml-1 mr-3 h-5 w-5 text-white" xmlns="http://www.w3.org/2000/svg" fill="none" viewBox="0 0 24 24">
-                <circle className="opacity-25" cx="12" cy="12" r="10" stroke="currentColor" strokeWidth="4"></circle>
-                <path className="opacity-75" fill="currentColor" d="M4 12a8 8 0 018-8V0C5.373 0 0 5.373 0 12h4zm2 5.291A7.962 7.962 0 014 12H0c0 3.042 1.135 5.824 3 7.938l3-2.647z"></path>
-              </svg>
-              Processing...
-            </span>
-          ) : (
-            `Pay $${amount.toFixed(2)}`
-          )}
-        </button>
-      </div>
+      <button type="submit" disabled={isProcessing} className="btn-primary w-full">
+        {isProcessing ? 'Confirming booking…' : `Pay ${formatINR(amount)}`}
+      </button>
     </form>
   );
 };

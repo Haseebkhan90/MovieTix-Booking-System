@@ -1,5 +1,6 @@
-import React, { createContext, useContext, useState } from 'react';
+import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
 import { Ticket } from '../types';
+import { TICKETS_KEY, loadJson, saveJson } from '../utils/storage';
 
 interface TicketContextType {
   tickets: Ticket[];
@@ -17,15 +18,17 @@ export const useTicketContext = () => {
 };
 
 export const TicketProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [tickets, setTickets] = useState<Ticket[]>([]);
+  const [tickets, setTickets] = useState<Ticket[]>(() => loadJson<Ticket[]>(TICKETS_KEY, []));
 
-  const addTicket = (ticket: Ticket) => {
-    setTickets(prev => [...prev, ticket]);
-  };
+  const addTicket = useCallback((ticket: Ticket) => {
+    setTickets((prev) => {
+      const next = [ticket, ...prev];
+      saveJson(TICKETS_KEY, next);
+      return next;
+    });
+  }, []);
 
-  return (
-    <TicketContext.Provider value={{ tickets, addTicket }}>
-      {children}
-    </TicketContext.Provider>
-  );
+  const value = useMemo(() => ({ tickets, addTicket }), [tickets, addTicket]);
+
+  return <TicketContext.Provider value={value}>{children}</TicketContext.Provider>;
 };

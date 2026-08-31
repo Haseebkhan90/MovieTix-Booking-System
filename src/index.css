@@ -1,3 +1,60 @@
 @tailwind base;
 @tailwind components;
 @tailwind utilities;
+
+@layer base {
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    @apply bg-cinema-bg text-zinc-100 font-sans antialiased;
+  }
+
+  ::selection {
+    background: rgba(248, 68, 100, 0.35);
+  }
+}
+
+@layer components {
+  .btn-primary {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl bg-cinema-accent px-5 py-3 text-sm font-semibold text-white shadow-glow transition hover:bg-[#ff5b78] disabled:cursor-not-allowed disabled:bg-zinc-600 disabled:shadow-none;
+  }
+
+  .btn-ghost {
+    @apply inline-flex items-center justify-center gap-2 rounded-xl border border-cinema-border bg-transparent px-4 py-2 text-sm font-medium text-zinc-200 transition hover:border-cinema-accent hover:text-white;
+  }
+
+  .chip {
+    @apply inline-flex items-center rounded-full border border-cinema-border bg-cinema-card px-3 py-1 text-xs font-medium text-zinc-300;
+  }
+
+  .input-field {
+    @apply w-full rounded-xl border border-cinema-border bg-cinema-surface px-3 py-2.5 text-sm text-white placeholder:text-zinc-500 outline-none transition focus:border-cinema-accent focus:ring-2 focus:ring-cinema-accent/30;
+  }
+
+  .card-surface {
+    @apply rounded-2xl border border-cinema-border bg-cinema-card;
+  }
+
+  .seat-btn {
+    @apply h-8 w-8 rounded-t-lg border text-[10px] font-semibold transition disabled:cursor-not-allowed;
+  }
+}
+
+.cinema-screen {
+  height: 14px;
+  border-radius: 50% 50% 0 0 / 100% 100% 0 0;
+  background: linear-gradient(180deg, rgba(248, 68, 100, 0.55), rgba(248, 68, 100, 0.05));
+  box-shadow: 0 12px 40px rgba(248, 68, 100, 0.25);
+}
+
+::-webkit-scrollbar {
+  width: 10px;
+  height: 10px;
+}
+
+::-webkit-scrollbar-thumb {
+  background: #2a2a38;
+  border-radius: 999px;
+}
