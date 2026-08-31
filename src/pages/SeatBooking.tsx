@@ -1,101 +1,131 @@
-import { useEffect, useMemo } from 'react';
-import { Link, useNavigate, useParams, useSearchParams } from 'react-router-dom';
-import { SeatSelector } from '../components/SeatSelector';
-import { useSeatContext } from '../context/SeatContext';
-import { getMovieById } from '../data/movies';
-import { getCinemaById } from '../data/cinemas';
-import { CATEGORY_LABEL, formatINR, formatShowDate, getSeatPrice } from '../utils/booking';
-import { saveDraft } from '../utils/draft';
+import { useEffect, useMemo, useState } from 'react';
+import { Link, useNavigate, useSearchParams } from 'react-router-dom';
+import { SeatSelector, HallSeat } from '../components/SeatSelector';
+import { api, ApiError, formatMoney } from '../api/client';
+import { HoldSummary } from '../types';
+import { useAuth } from '../context/AuthContext';
+
+type ApiSeat = {
+  id: string;
+  row: string;
+  number: number;
+  category: string;
+  priceMinor: number;
+  status: 'available' | 'sold' | 'held' | 'mine';
+};
+
+type ShowInfo = {
+  id: string;
+  startsAt: string;
+  movie: { id: string; title: string };
+  cinema: { name: string; mall: string; city: string };
+  currency: string;
+};
 
 export const SeatBooking = () => {
-  const { id } = useParams();
   const [params] = useSearchParams();
+  const showId = params.get('show') ?? '';
   const navigate = useNavigate();
-  const movie = getMovieById(Number(id));
-  const cinemaId = params.get('cinema') ?? '';
-  const date = params.get('date') ?? '';
-  const time = params.get('time') ?? '';
-  const cinema = getCinemaById(cinemaId);
-  const { selectedSeats, notice, initializeSeats } = useSeatContext();
+  const { user } = useAuth();
+  const [show, setShow] = useState<ShowInfo | null>(null);
+  const [seats, setSeats] = useState<ApiSeat[]>([]);
+  const [selected, setSelected] = useState<string[]>([]);
+  const [notice, setNotice] = useState<string | null>(null);
+  const [busy, setBusy] = useState(false);
 
   useEffect(() => {
-    if (movie && cinemaId && date && time) {
-      initializeSeats({ movieId: movie.id, cinemaId, date, time });
+    if (!showId) return;
+    api<ShowInfo>(`/shows/${showId}`).then(setShow).catch(() => setShow(null));
+  }, [showId]);
+
+  useEffect(() => {
+    if (!showId) return;
+    const load = () =>
+      api<{ seats: ApiSeat[] }>(`/shows/${showId}/seats`).then((data) => setSeats(data.seats));
+    load();
+    const t = window.setInterval(load, 8000);
+    return () => window.clearInterval(t);
+  }, [showId]);
+
+  const selectedSeats = useMemo(() => seats.filter((s) => selected.includes(s.id)), [seats, selected]);
+  const subtotal = selectedSeats.reduce((sum, s) => sum + s.priceMinor, 0);
+
+  const toggle = (seat: HallSeat) => {
+    if (seat.status === 'sold' || seat.status === 'held') return;
+    setSelected((prev) => {
+      if (prev.includes(seat.id)) return prev.filter((id) => id !== seat.id);
+      if (prev.length >= 10) {
+        setNotice('Maximum 10 seats per booking');
+        return prev;
+      }
+      setNotice(null);
+      return [...prev, seat.id];
+    });
+  };
+
+  const proceed = async () => {
+    if (!selectedSeats.length || !show) return;
+    if (!user) {
+      navigate(`/login?next=${encodeURIComponent(`/movie/${show.movie.id}/seats?show=${showId}`)}`);
+      return;
     }
-  }, [movie, cinemaId, date, time, initializeSeats]);
+    setBusy(true);
+    try {
+      const hold = await api<HoldSummary>('/holds', {
+        method: 'POST',
+        body: JSON.stringify({
+          showId,
+          seats: selectedSeats.map((s) => ({ row: s.row, number: s.number })),
+        }),
+      });
+      sessionStorage.setItem('movietix.hold', JSON.stringify(hold));
+      navigate('/checkout');
+    } catch (err) {
+      setNotice(err instanceof ApiError ? err.message : 'Could not hold seats');
+    } finally {
+      setBusy(false);
+    }
+  };
 
-  const subtotal = useMemo(
-    () => selectedSeats.reduce((sum, seat) => sum + getSeatPrice(movie?.price ?? 0, seat.category), 0),
-    [selectedSeats, movie?.price]
-  );
-
-  if (!movie || !cinema || !date || !time) {
+  if (!showId || !show) {
     return (
       <div className="mx-auto max-w-xl px-4 py-24 text-center">
-        <h1 className="text-2xl font-bold">Invalid show selection</h1>
-        <Link to="/" className="btn-primary mt-6">
-          Choose a movie
-        </Link>
+        <h1 className="text-2xl font-bold">Select a showtime first</h1>
+        <Link to="/" className="btn-primary mt-6">Choose a movie</Link>
       </div>
     );
   }
-
-  const proceed = () => {
-    if (!selectedSeats.length) return;
-    saveDraft({
-      movieId: movie.id,
-      cinemaId,
-      showDate: date,
-      showtime: time,
-      seats: selectedSeats,
-      subtotal,
-    });
-    navigate('/checkout');
-  };
 
   return (
     <div className="pb-28">
       <div className="border-b border-cinema-border bg-cinema-surface">
         <div className="mx-auto flex max-w-7xl flex-col gap-1 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            <h1 className="text-xl font-bold">{movie.title}</h1>
+            <h1 className="text-xl font-bold">{show.movie.title}</h1>
             <p className="text-sm text-zinc-400">
-              {cinema.name}, {cinema.mall} • {formatShowDate(date)} • {time}
+              {show.cinema.name}, {show.cinema.mall} · {new Date(show.startsAt).toLocaleString()}
             </p>
           </div>
-          <Link to={`/movie/${movie.id}`} className="text-sm text-cinema-accent">
-            Change show
-          </Link>
+          <Link to={`/movie/${show.movie.id}`} className="text-sm text-cinema-accent">Change show</Link>
         </div>
       </div>
-
       <div className="mx-auto max-w-7xl px-4 py-8">
-        <SeatSelector movieId={movie.id} cinemaId={cinemaId} date={date} time={time} />
+        <SeatSelector seats={seats} selected={selected} onToggle={toggle} />
         {notice && <p className="mt-4 text-center text-sm text-amber-300">{notice}</p>}
       </div>
-
       <div className="fixed bottom-0 left-0 right-0 border-t border-cinema-border bg-cinema-surface/95 backdrop-blur">
         <div className="mx-auto flex max-w-7xl flex-col gap-3 px-4 py-4 sm:flex-row sm:items-center sm:justify-between">
           <div>
-            {selectedSeats.length === 0 ? (
+            {selected.length === 0 ? (
               <p className="text-sm text-zinc-400">Select seats to continue</p>
             ) : (
-              <>
-                <p className="text-sm text-zinc-400">
-                  {selectedSeats.length} seat{selectedSeats.length > 1 ? 's' : ''} •{' '}
-                  {selectedSeats.map((s) => `${s.row}${s.number}`).join(', ')}
-                </p>
-                <p className="text-lg font-bold">
-                  {formatINR(subtotal)}{' '}
-                  <span className="text-xs font-normal text-zinc-500">
-                    {Array.from(new Set(selectedSeats.map((s) => CATEGORY_LABEL[s.category]))).join(' + ')}
-                  </span>
-                </p>
-              </>
+              <p className="text-lg font-bold">
+                {selectedSeats.map((s) => `${s.row}${s.number}`).join(', ')} · {formatMoney(subtotal, show.currency)}
+              </p>
             )}
           </div>
-          <button type="button" disabled={selectedSeats.length === 0} onClick={proceed} className="btn-primary min-w-40">
-            {selectedSeats.length === 0 ? 'Select seats' : `Pay ${formatINR(subtotal)}`}
+          <button type="button" disabled={!selected.length || busy} onClick={proceed} className="btn-primary min-w-40">
+            {busy ? 'Holding seats…' : selected.length === 0 ? 'Select seats' : `Pay ${formatMoney(subtotal, show.currency)}`}
           </button>
         </div>
       </div>

@@ -1,33 +1,43 @@
-export type MovieStatus = 'now-showing' | 'coming-soon';
 export type SeatCategory = 'regular' | 'premium' | 'recliner';
-export type Certification = 'U' | 'UA' | 'A';
+export type SeatStatus = 'available' | 'sold' | 'held' | 'mine' | 'selected';
+
+export type AuthUser = {
+  id: string;
+  email: string;
+  name: string;
+  role: string;
+  tenantId: string | null;
+  phone?: string | null;
+};
+
+export type CityInfo = {
+  city: string;
+  country: string;
+  countryCode: string;
+  currency: string;
+};
 
 export interface Movie {
-  id: number;
+  id: string;
+  movieId?: string;
   title: string;
   imageUrl: string;
   backdropUrl: string;
   description: string;
   duration: string;
+  durationMin?: number;
   genre: string[];
   rating: number;
-  price: number;
+  priceMinor?: number;
+  currency?: string;
   language: string;
-  certification: Certification;
+  certification: string;
   formats: string[];
   cast: string[];
   director: string;
-  status: MovieStatus;
+  status: string;
   releaseDate: string;
   featured: boolean;
-}
-
-export interface Cinema {
-  id: string;
-  name: string;
-  mall: string;
-  city: string;
-  amenities: string[];
 }
 
 export interface Seat {
@@ -35,30 +45,41 @@ export interface Seat {
   row: string;
   number: number;
   category: SeatCategory;
-  isBooked: boolean;
-  isSelected: boolean;
+  label?: string;
+  priceMinor?: number;
+  status?: SeatStatus;
+  isBooked?: boolean;
+  isSelected?: boolean;
 }
 
 export interface Ticket {
   id: string;
-  movieId: number;
-  cinemaId: string;
-  seats: Seat[];
+  code?: string;
+  movie: Movie;
+  cinema: { name: string; mall: string; city: string; country?: string };
   showDate: string;
-  showtime: string;
-  subtotal: number;
+  seats: Seat[];
+  subtotalMinor?: number;
   convenienceFee: number;
   discount: number;
   totalAmount: number;
+  currency: string;
   purchaseDate: string;
-  city: string;
+  qrPayload?: string;
+  city?: string;
 }
 
-export interface BookingDraft {
-  movieId: number;
-  cinemaId: string;
-  showDate: string;
-  showtime: string;
-  seats: Seat[];
-  subtotal: number;
-}
+export type HoldSummary = {
+  holdId: string;
+  expiresAt: string;
+  showId: string;
+  movie: Movie;
+  cinema: { name: string; mall: string; city: string };
+  startsAt: string;
+  seats: Array<Seat & { priceMinor: number; category: string }>;
+  subtotalMinor: number;
+  feeMinor: number;
+  discountMinor: number;
+  totalMinor: number;
+  currency: string;
+};

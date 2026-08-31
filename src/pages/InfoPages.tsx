@@ -4,8 +4,7 @@ export const About = () => (
   <article className="prose-invert mx-auto max-w-3xl px-4 py-12">
     <h1 className="text-3xl font-bold">About MovieTix</h1>
     <p className="mt-4 text-zinc-300">
-      MovieTix is a cinema booking experience built for Indian cities — Mumbai to Chennai — with live-style
-      showtimes, seat maps, and instant M-Tickets. This demo runs entirely in the browser.
+      MovieTix is a cinema booking SaaS for India, the UAE, the UK, and the US. Customers book seats; cinema staff run shows from the ops dashboard. Accounts and tickets live on the server.
     </p>
     <p className="mt-3 text-zinc-400">
       Choose a city, pick a film, lock seats, and walk out with a QR ticket. Payments are simulated so you can
@@ -44,7 +43,7 @@ export const Contact = () => {
 const faqs = [
   {
     q: 'Is this a real booking?',
-    a: 'No. MovieTix is a frontend demo. Seats and tickets are stored in your browser only.',
+    a: 'Yes — on the MovieTix server. Tickets are tied to your account. Card charges are still simulated until you add Stripe/Razorpay keys.',
   },
   {
     q: 'How do I pay?',
@@ -52,11 +51,11 @@ const faqs = [
   },
   {
     q: 'Can I cancel a ticket?',
-    a: 'Cancellation is not enabled in this demo. Booked seats stay reserved for that show in this browser.',
+    a: 'Customer cancellation is not on yet. Cinema staff can see bookings in the ops dashboard.',
   },
   {
-    q: 'Why do some shows look sold?',
-    a: 'Each hall starts with a realistic scatter of occupied seats, plus any seats you already booked.',
+    q: 'Why do some seats look sold?',
+    a: 'Halls start with a realistic scatter of occupied seats, plus any seats already booked in the database.',
   },
 ];
 

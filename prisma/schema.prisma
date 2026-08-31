@@ -1,0 +1,183 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "sqlite"
+  url      = env("DATABASE_URL")
+}
+
+model Tenant {
+  id                    String   @id @default(cuid())
+  slug                  String   @unique
+  name                  String
+  country               String
+  countryCode           String
+  currency              String
+  timezone              String
+  utcOffsetMinutes      Int
+  locale                String
+  convenienceBps        Int      @default(1200)
+  convenienceFlatMinor  Int      @default(1900)
+  status                String   @default("active")
+  createdAt             DateTime @default(now())
+
+  users    User[]
+  cinemas  Cinema[]
+  bookings Booking[]
+  promos   PromoCode[]
+}
+
+model User {
+  id           String   @id @default(cuid())
+  email        String   @unique
+  passwordHash String
+  name         String
+  phone        String?
+  role         String   @default("CUSTOMER")
+  tenantId     String?
+  tenant       Tenant?  @relation(fields: [tenantId], references: [id])
+  createdAt    DateTime @default(now())
+
+  holds    SeatHold[]
+  bookings Booking[]
+}
+
+model Movie {
+  id             String   @id @default(cuid())
+  slug           String   @unique
+  title          String
+  imageUrl       String
+  backdropUrl    String
+  description    String
+  durationMin    Int
+  genres         String
+  language       String
+  certification  String
+  formats        String
+  cast           String
+  director       String
+  status         String
+  releaseDate    String
+  featured       Boolean  @default(false)
+  rating         Float
+  createdAt      DateTime @default(now())
+
+  shows Show[]
+}
+
+model Cinema {
+  id           String   @id @default(cuid())
+  slug         String   @unique
+  tenantId     String
+  tenant       Tenant   @relation(fields: [tenantId], references: [id])
+  name         String
+  mall         String
+  city         String
+  country      String
+  address      String
+  amenities    String
+  screens      Screen[]
+  shows        Show[]
+  bookings     Booking[]
+  createdAt    DateTime @default(now())
+}
+
+model Screen {
+  id          String  @id @default(cuid())
+  cinemaId    String
+  cinema      Cinema  @relation(fields: [cinemaId], references: [id])
+  name        String
+  rows        Int
+  seatsPerRow Int
+  shows       Show[]
+}
+
+model Show {
+  id          String   @id @default(cuid())
+  movieId     String
+  movie       Movie    @relation(fields: [movieId], references: [id])
+  cinemaId    String
+  cinema      Cinema   @relation(fields: [cinemaId], references: [id])
+  screenId    String
+  screen      Screen   @relation(fields: [screenId], references: [id])
+  startsAt    DateTime
+  format      String
+  language    String
+  basePriceMinor Int
+  currency    String
+  holds       SeatHold[]
+  bookingSeats BookingSeat[]
+  bookings    Booking[]
+
+  @@index([cinemaId, startsAt])
+  @@index([movieId, startsAt])
+}
+
+model SeatHold {
+  id        String   @id @default(cuid())
+  holdId    String
+  showId    String
+  show      Show     @relation(fields: [showId], references: [id])
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  seatKey   String
+  row       String
+  number    Int
+  category  String
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@unique([showId, seatKey])
+  @@index([holdId])
+  @@index([expiresAt])
+}
+
+model Booking {
+  id               String   @id @default(cuid())
+  code             String   @unique
+  userId           String
+  user             User     @relation(fields: [userId], references: [id])
+  tenantId         String
+  tenant           Tenant   @relation(fields: [tenantId], references: [id])
+  cinemaId         String
+  cinema           Cinema   @relation(fields: [cinemaId], references: [id])
+  showId           String
+  show             Show     @relation(fields: [showId], references: [id])
+  status           String   @default("CONFIRMED")
+  subtotalMinor    Int
+  feeMinor         Int
+  discountMinor    Int      @default(0)
+  totalMinor       Int
+  currency         String
+  promoCode        String?
+  qrPayload        String
+  createdAt        DateTime @default(now())
+  seats            BookingSeat[]
+
+  @@index([userId, createdAt])
+}
+
+model BookingSeat {
+  id         String  @id @default(cuid())
+  bookingId  String
+  booking    Booking @relation(fields: [bookingId], references: [id])
+  showId     String
+  show       Show    @relation(fields: [showId], references: [id])
+  seatKey    String
+  row        String
+  number     Int
+  category   String
+  priceMinor Int
+
+  @@unique([showId, seatKey])
+}
+
+model PromoCode {
+  id          String  @id @default(cuid())
+  tenantId    String?
+  tenant      Tenant? @relation(fields: [tenantId], references: [id])
+  code        String  @unique
+  percentOff  Int
+  active      Boolean @default(true)
+}

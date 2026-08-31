@@ -10,7 +10,7 @@ export const Footer = () => {
             Movie<span className="text-cinema-accent">Tix</span>
           </h3>
           <p className="text-sm text-zinc-400">
-            India’s cinematic booking experience — showtimes, seats, and e-tickets in one place.
+            Book cinema tickets in India, the UAE, the UK, and the US — seats, M-Tickets, and cinema tools in one product.
           </p>
         </div>
         <div>
@@ -32,8 +32,8 @@ export const Footer = () => {
               </Link>
             </li>
             <li>
-              <Link to="/faq" className="hover:text-white">
-                FAQ
+              <Link to="/admin" className="hover:text-white">
+                Cinema login
               </Link>
             </li>
           </ul>

@@ -1,17 +1,33 @@
-import { Movie } from '../types';
+export type CatalogMovie = {
+  slug: string;
+  title: string;
+  imageUrl: string;
+  backdropUrl: string;
+  description: string;
+  durationMin: number;
+  genres: string[];
+  language: string;
+  certification: string;
+  formats: string[];
+  cast: string[];
+  director: string;
+  status: 'now-showing' | 'coming-soon';
+  releaseDate: string;
+  featured: boolean;
+  rating: number;
+  inrPrice: number;
+};
 
-export const movies: Movie[] = [
+export const catalog: CatalogMovie[] = [
   {
-    id: 1,
+    slug: 'jawan',
     title: 'Jawan',
     imageUrl: 'https://images.unsplash.com/photo-1485846234645-a62644f84728?auto=format&fit=crop&q=80&w=800',
     backdropUrl: 'https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&q=80&w=1600',
     description:
       'A high-octane action thriller that follows a man who is driven by a personal vendetta to rectify the wrongs in society, with intense stunts and a dual-role spectacle.',
-    duration: '2h 49min',
-    genre: ['Action', 'Thriller'],
-    rating: 8.2,
-    price: 280,
+    durationMin: 169,
+    genres: ['Action', 'Thriller'],
     language: 'Hindi',
     certification: 'UA',
     formats: ['2D', 'IMAX'],
@@ -20,18 +36,18 @@ export const movies: Movie[] = [
     status: 'now-showing',
     releaseDate: '2023-09-07',
     featured: true,
+    rating: 8.2,
+    inrPrice: 280,
   },
   {
-    id: 2,
+    slug: 'rrr',
     title: 'RRR',
     imageUrl: 'https://images.unsplash.com/photo-1536440136628-849c177e76a1?auto=format&fit=crop&q=80&w=800',
     backdropUrl: 'https://images.unsplash.com/photo-1478720568477-152d9b164e26?auto=format&fit=crop&q=80&w=1600',
     description:
       'A fictional story about two legendary revolutionaries and their journey away from home before they started fighting for their country in the 1920s.',
-    duration: '3h 7min',
-    genre: ['Action', 'Drama'],
-    rating: 8.8,
-    price: 320,
+    durationMin: 187,
+    genres: ['Action', 'Drama'],
     language: 'Telugu',
     certification: 'UA',
     formats: ['2D', '3D', 'IMAX'],
@@ -40,18 +56,18 @@ export const movies: Movie[] = [
     status: 'now-showing',
     releaseDate: '2022-03-24',
     featured: true,
+    rating: 8.8,
+    inrPrice: 320,
   },
   {
-    id: 3,
+    slug: '12th-fail',
     title: '12th Fail',
     imageUrl: 'https://images.unsplash.com/photo-1481627834876-b7833e8f5570?auto=format&fit=crop&q=80&w=800',
     backdropUrl: 'https://images.unsplash.com/photo-1524995997946-a1c2e315a42f?auto=format&fit=crop&q=80&w=1600',
     description:
       'The real-life story of an IPS officer who overcame extreme poverty and repeated failure to crack one of India’s toughest examinations.',
-    duration: '2h 27min',
-    genre: ['Drama', 'Biography'],
-    rating: 9.1,
-    price: 220,
+    durationMin: 147,
+    genres: ['Drama', 'Biography'],
     language: 'Hindi',
     certification: 'U',
     formats: ['2D'],
@@ -60,18 +76,18 @@ export const movies: Movie[] = [
     status: 'now-showing',
     releaseDate: '2023-10-27',
     featured: false,
+    rating: 9.1,
+    inrPrice: 220,
   },
   {
-    id: 4,
+    slug: 'inception',
     title: 'Inception',
     imageUrl: 'https://images.unsplash.com/photo-1440404653325-ab127d49abc1?auto=format&fit=crop&q=80&w=800',
     backdropUrl: 'https://images.unsplash.com/photo-1419242902214-272b3f66ee7a?auto=format&fit=crop&q=80&w=1600',
     description:
       'A thief who steals corporate secrets through dream-sharing technology is given the inverse task of planting an idea into the mind of a C.E.O.',
-    duration: '2h 28min',
-    genre: ['Action', 'Sci-Fi', 'Thriller'],
-    rating: 8.8,
-    price: 350,
+    durationMin: 148,
+    genres: ['Action', 'Sci-Fi', 'Thriller'],
     language: 'English',
     certification: 'UA',
     formats: ['2D', 'IMAX'],
@@ -80,18 +96,18 @@ export const movies: Movie[] = [
     status: 'now-showing',
     releaseDate: '2010-07-16',
     featured: true,
+    rating: 8.8,
+    inrPrice: 350,
   },
   {
-    id: 5,
+    slug: 'interstellar',
     title: 'Interstellar',
     imageUrl: 'https://images.unsplash.com/photo-1462331940025-496dfbfc7564?auto=format&fit=crop&q=80&w=800',
     backdropUrl: 'https://images.unsplash.com/photo-1464802686167-b339d62d0c40?auto=format&fit=crop&q=80&w=1600',
     description:
       'A team of explorers travel through a wormhole in space in an attempt to ensure humanity’s survival.',
-    duration: '2h 49min',
-    genre: ['Adventure', 'Drama', 'Sci-Fi'],
-    rating: 8.7,
-    price: 380,
+    durationMin: 169,
+    genres: ['Adventure', 'Drama', 'Sci-Fi'],
     language: 'English',
     certification: 'UA',
     formats: ['2D', 'IMAX'],
@@ -100,18 +116,18 @@ export const movies: Movie[] = [
     status: 'now-showing',
     releaseDate: '2014-11-07',
     featured: true,
+    rating: 8.7,
+    inrPrice: 380,
   },
   {
-    id: 6,
+    slug: 'dangal',
     title: 'Dangal',
     imageUrl: 'https://images.unsplash.com/photo-1552072092-7f9b8d63efcb?auto=format&fit=crop&q=80&w=800',
     backdropUrl: 'https://images.unsplash.com/photo-1461896836934-ffe607ba6851?auto=format&fit=crop&q=80&w=1600',
     description:
-      'Former wrestler Mahavir Singh Phogat trains his daughters to become world-class wrestlers, rewriting what was possible for women in Indian sport.',
-    duration: '2h 41min',
-    genre: ['Biography', 'Drama', 'Sport'],
-    rating: 8.4,
-    price: 250,
+      'Former wrestler Mahavir Singh Phogat trains his daughters to become world-class wrestlers.',
+    durationMin: 161,
+    genres: ['Biography', 'Drama', 'Sport'],
     language: 'Hindi',
     certification: 'U',
     formats: ['2D'],
@@ -120,18 +136,18 @@ export const movies: Movie[] = [
     status: 'now-showing',
     releaseDate: '2016-12-23',
     featured: false,
+    rating: 8.4,
+    inrPrice: 250,
   },
   {
-    id: 7,
+    slug: 'the-dark-knight',
     title: 'The Dark Knight',
     imageUrl: 'https://images.unsplash.com/photo-1509347528160-9a9e33742cdb?auto=format&fit=crop&q=80&w=800',
     backdropUrl: 'https://images.unsplash.com/photo-1478760329108-5c3ed9d495a0?auto=format&fit=crop&q=80&w=1600',
     description:
-      'When the Joker wreaks havoc on Gotham, Batman must accept one of the greatest psychological and physical tests of his ability to fight injustice.',
-    duration: '2h 32min',
-    genre: ['Action', 'Crime', 'Drama'],
-    rating: 9.0,
-    price: 340,
+      'When the Joker wreaks havoc on Gotham, Batman must accept one of the greatest tests of his ability to fight injustice.',
+    durationMin: 152,
+    genres: ['Action', 'Crime', 'Drama'],
     language: 'English',
     certification: 'UA',
     formats: ['2D', 'IMAX'],
@@ -140,18 +156,18 @@ export const movies: Movie[] = [
     status: 'now-showing',
     releaseDate: '2008-07-18',
     featured: false,
+    rating: 9.0,
+    inrPrice: 340,
   },
   {
-    id: 8,
+    slug: '3-idiots',
     title: '3 Idiots',
     imageUrl: 'https://images.unsplash.com/photo-1523050854058-8df90110c9f1?auto=format&fit=crop&q=80&w=800',
     backdropUrl: 'https://images.unsplash.com/photo-1524178232363-1fb2b075b655?auto=format&fit=crop&q=80&w=1600',
     description:
-      'Two friends search for their long-lost college companion, while flashbacks reveal how he challenged a pressure-cooker education system.',
-    duration: '2h 50min',
-    genre: ['Comedy', 'Drama'],
-    rating: 8.4,
-    price: 230,
+      'Two friends search for their long-lost college companion while flashbacks reveal how he challenged a pressure-cooker education system.',
+    durationMin: 170,
+    genres: ['Comedy', 'Drama'],
     language: 'Hindi',
     certification: 'UA',
     formats: ['2D'],
@@ -160,18 +176,18 @@ export const movies: Movie[] = [
     status: 'now-showing',
     releaseDate: '2009-12-25',
     featured: false,
+    rating: 8.4,
+    inrPrice: 230,
   },
   {
-    id: 9,
+    slug: 'pathaan',
     title: 'Pathaan',
     imageUrl: 'https://images.unsplash.com/photo-1594908900066-3f47337549d8?auto=format&fit=crop&q=80&w=800',
     backdropUrl: 'https://images.unsplash.com/photo-1517604931442-7e0c8ed2963c?auto=format&fit=crop&q=80&w=1600',
     description:
-      'An exiled RAW agent must stop a mercenary organization from launching a deadly attack on India in this globe-trotting spy action film.',
-    duration: '2h 26min',
-    genre: ['Action', 'Thriller'],
-    rating: 7.9,
-    price: 300,
+      'An exiled RAW agent must stop a mercenary organization from launching a deadly attack on India.',
+    durationMin: 146,
+    genres: ['Action', 'Thriller'],
     language: 'Hindi',
     certification: 'UA',
     formats: ['2D', 'IMAX'],
@@ -180,18 +196,18 @@ export const movies: Movie[] = [
     status: 'now-showing',
     releaseDate: '2023-01-25',
     featured: false,
+    rating: 7.9,
+    inrPrice: 300,
   },
   {
-    id: 10,
+    slug: 'spider-verse',
     title: 'Spider-Man: Across the Spider-Verse',
     imageUrl: 'https://images.unsplash.com/photo-1635805737707-575885ab0820?auto=format&fit=crop&q=80&w=800',
     backdropUrl: 'https://images.unsplash.com/photo-1612036782180-6f0b6cd846fe?auto=format&fit=crop&q=80&w=1600',
     description:
       'Miles Morales catapults across the Multiverse, where he encounters a team of Spider-People charged with protecting its very existence.',
-    duration: '2h 20min',
-    genre: ['Animation', 'Action', 'Adventure'],
-    rating: 8.6,
-    price: 360,
+    durationMin: 140,
+    genres: ['Animation', 'Action', 'Adventure'],
     language: 'English',
     certification: 'U',
     formats: ['2D', '3D', 'IMAX'],
@@ -200,18 +216,18 @@ export const movies: Movie[] = [
     status: 'now-showing',
     releaseDate: '2023-06-02',
     featured: true,
+    rating: 8.6,
+    inrPrice: 360,
   },
   {
-    id: 11,
+    slug: 'kalki-2898-ad',
     title: 'Kalki 2898 AD',
     imageUrl: 'https://images.unsplash.com/photo-1451187580459-43490279c0fa?auto=format&fit=crop&q=80&w=800',
     backdropUrl: 'https://images.unsplash.com/photo-1446776811953-b23d57bd21aa?auto=format&fit=crop&q=80&w=1600',
     description:
-      'A mythic sci-fi epic set in a future dystopia where a handful of rebels fight to protect the unborn child believed to be Kalki, the tenth avatar.',
-    duration: '3h 1min',
-    genre: ['Sci-Fi', 'Action', 'Fantasy'],
-    rating: 8.0,
-    price: 400,
+      'A mythic sci-fi epic set in a future dystopia where rebels fight to protect the unborn child believed to be Kalki.',
+    durationMin: 181,
+    genres: ['Sci-Fi', 'Action', 'Fantasy'],
     language: 'Telugu',
     certification: 'UA',
     formats: ['2D', 'IMAX'],
@@ -220,18 +236,18 @@ export const movies: Movie[] = [
     status: 'coming-soon',
     releaseDate: '2026-09-18',
     featured: false,
+    rating: 8.0,
+    inrPrice: 400,
   },
   {
-    id: 12,
+    slug: 'dune-part-three',
     title: 'Dune: Part Three',
     imageUrl: 'https://images.unsplash.com/photo-1506905925346-21bda4d32df4?auto=format&fit=crop&q=80&w=800',
     backdropUrl: 'https://images.unsplash.com/photo-1469474968028-56623f02e42e?auto=format&fit=crop&q=80&w=1600',
     description:
-      'The desert planet’s fate hangs in the balance as Paul Atreides walks the fine line between messiah and tyrant in the next chapter of the saga.',
-    duration: '2h 46min',
-    genre: ['Sci-Fi', 'Adventure', 'Drama'],
-    rating: 8.5,
-    price: 420,
+      'The desert planet’s fate hangs in the balance as Paul Atreides walks the line between messiah and tyrant.',
+    durationMin: 166,
+    genres: ['Sci-Fi', 'Adventure', 'Drama'],
     language: 'English',
     certification: 'UA',
     formats: ['2D', 'IMAX'],
@@ -240,9 +256,7 @@ export const movies: Movie[] = [
     status: 'coming-soon',
     releaseDate: '2026-12-18',
     featured: false,
+    rating: 8.5,
+    inrPrice: 420,
   },
 ];
-
-export const getMovieById = (id: number) => movies.find((m) => m.id === id);
-
-export const allGenres = Array.from(new Set(movies.flatMap((m) => m.genre))).sort();
