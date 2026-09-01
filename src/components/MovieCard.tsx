@@ -2,7 +2,7 @@ import React from 'react';
 import { Link } from 'react-router-dom';
 import { Clock, Star } from 'lucide-react';
 import { Movie } from '../types';
-import { formatINR } from '../utils/booking';
+import { formatMoney } from '../api/client';
 
 interface MovieCardProps {
   movie: Movie;
@@ -41,7 +41,7 @@ export const MovieCard: React.FC<MovieCardProps> = ({ movie }) => {
             {movie.duration}
           </span>
           <span className="font-semibold text-white">
-            {movie.status === 'coming-soon' ? 'Notify' : `from ${formatINR(movie.price)}`}
+            {movie.status === 'coming-soon' ? 'Notify' : `from ${formatMoney(movie.priceMinor ?? 0, movie.currency ?? 'INR')}`}
           </span>
         </div>
         <div className="flex flex-wrap gap-1 px-4 pb-4">

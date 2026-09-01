@@ -1,21 +1,21 @@
 import { FormEvent, useState } from 'react';
 import { Link, NavLink, useLocation, useNavigate } from 'react-router-dom';
 import { Film, MapPin, Menu, Search, Ticket, User, X } from 'lucide-react';
-import { CITIES, City } from '../data/cinemas';
 import { useCity } from '../context/CityContext';
-import { useTicketContext } from '../context/TicketContext';
+import { useAuth } from '../context/AuthContext';
 
 const navClass = ({ isActive }: { isActive: boolean }) =>
   `text-sm font-medium transition ${isActive ? 'text-cinema-accent' : 'text-zinc-300 hover:text-white'}`;
 
 export const Navbar = () => {
-  const { city, setCity } = useCity();
-  const { tickets } = useTicketContext();
+  const { city, setCity, cities } = useCity();
+  const { user, isStaff, logout } = useAuth();
   const [open, setOpen] = useState(false);
   const [cityOpen, setCityOpen] = useState(false);
   const [query, setQuery] = useState('');
   const navigate = useNavigate();
   const location = useLocation();
+  if (location.pathname.startsWith('/admin')) return null;
 
   const onSearch = (e: FormEvent) => {
     e.preventDefault();
@@ -24,10 +24,11 @@ export const Navbar = () => {
     setOpen(false);
   };
 
-  const pickCity = (next: City) => {
-    setCity(next);
-    setCityOpen(false);
-  };
+  const grouped = cities.reduce<Record<string, typeof cities>>((acc, item) => {
+    acc[item.country] = acc[item.country] || [];
+    acc[item.country].push(item);
+    return acc;
+  }, {});
 
   return (
     <header className="relative sticky top-0 z-40 border-b border-white/5 bg-cinema-bg/85 backdrop-blur-xl">
@@ -61,7 +62,7 @@ export const Navbar = () => {
           />
         </form>
 
-        <nav className="hidden items-center gap-6 md:flex">
+        <nav className="hidden items-center gap-5 md:flex">
           <NavLink to="/" className={navClass} end>
             Movies
           </NavLink>
@@ -69,19 +70,25 @@ export const Navbar = () => {
             <span className="inline-flex items-center gap-1">
               <Ticket className="h-4 w-4" />
               Tickets
-              {tickets.length > 0 && (
-                <span className="rounded-full bg-cinema-accent px-1.5 text-[10px] font-bold text-white">
-                  {tickets.length}
-                </span>
-              )}
             </span>
           </NavLink>
-          <NavLink to="/profile" className={navClass}>
-            <span className="inline-flex items-center gap-1">
-              <User className="h-4 w-4" />
-              Profile
-            </span>
-          </NavLink>
+          {isStaff && (
+            <NavLink to="/admin" className={navClass}>
+              Dashboard
+            </NavLink>
+          )}
+          {user ? (
+            <NavLink to="/profile" className={navClass}>
+              <span className="inline-flex items-center gap-1">
+                <User className="h-4 w-4" />
+                {user.name.split(' ')[0]}
+              </span>
+            </NavLink>
+          ) : (
+            <Link to={`/login?next=${encodeURIComponent(location.pathname)}`} className="btn-primary !px-3 !py-1.5 text-xs">
+              Sign in
+            </Link>
+          )}
         </nav>
 
         <button
@@ -96,18 +103,28 @@ export const Navbar = () => {
 
       {cityOpen && (
         <div className="absolute left-0 right-0 z-50 border-b border-cinema-border bg-cinema-surface">
-          <div className="mx-auto grid max-w-7xl grid-cols-2 gap-2 px-4 py-4 sm:grid-cols-3 md:grid-cols-6">
-            {CITIES.map((c) => (
-              <button
-                key={c}
-                type="button"
-                onClick={() => pickCity(c)}
-                className={`rounded-xl px-3 py-2 text-sm ${
-                  city === c ? 'bg-cinema-accent text-white' : 'bg-cinema-card text-zinc-200 hover:bg-cinema-elevated'
-                }`}
-              >
-                {c}
-              </button>
+          <div className="mx-auto max-w-7xl space-y-4 px-4 py-4">
+            {Object.entries(grouped).map(([country, list]) => (
+              <div key={country}>
+                <p className="mb-2 text-[11px] uppercase tracking-wider text-zinc-500">{country}</p>
+                <div className="flex flex-wrap gap-2">
+                  {list.map((c) => (
+                    <button
+                      key={c.city}
+                      type="button"
+                      onClick={() => {
+                        setCity(c.city);
+                        setCityOpen(false);
+                      }}
+                      className={`rounded-xl px-3 py-2 text-sm ${
+                        city === c.city ? 'bg-cinema-accent text-white' : 'bg-cinema-card text-zinc-200 hover:bg-cinema-elevated'
+                      }`}
+                    >
+                      {c.city}
+                    </button>
+                  ))}
+                </div>
+              </div>
             ))}
           </div>
         </div>
@@ -116,42 +133,27 @@ export const Navbar = () => {
       {open && (
         <div className="border-t border-cinema-border bg-cinema-surface px-4 py-4 md:hidden">
           <form onSubmit={onSearch} className="mb-3">
-            <input
-              value={query}
-              onChange={(e) => setQuery(e.target.value)}
-              placeholder="Search movies"
-              className="input-field"
-            />
+            <input value={query} onChange={(e) => setQuery(e.target.value)} placeholder="Search movies" className="input-field" />
           </form>
-          <p className="mb-2 text-xs uppercase tracking-wide text-zinc-500">City</p>
-          <div className="mb-4 flex flex-wrap gap-2">
-            {CITIES.map((c) => (
-              <button
-                key={c}
-                type="button"
-                onClick={() => pickCity(c)}
-                className={`rounded-full px-3 py-1 text-xs ${
-                  city === c ? 'bg-cinema-accent text-white' : 'bg-cinema-card text-zinc-300'
-                }`}
-              >
-                {c}
-              </button>
-            ))}
-          </div>
           <div className="flex flex-col gap-3">
-            <Link to="/" onClick={() => setOpen(false)}>
-              Movies
-            </Link>
-            <Link to="/my-tickets" onClick={() => setOpen(false)}>
-              My Tickets
-            </Link>
-            <Link to="/profile" onClick={() => setOpen(false)}>
-              Profile
-            </Link>
-            {location.pathname !== '/about' && (
-              <Link to="/about" onClick={() => setOpen(false)}>
-                About
-              </Link>
+            <Link to="/" onClick={() => setOpen(false)}>Movies</Link>
+            <Link to="/my-tickets" onClick={() => setOpen(false)}>My Tickets</Link>
+            {isStaff && <Link to="/admin" onClick={() => setOpen(false)}>Dashboard</Link>}
+            {user ? (
+              <>
+                <Link to="/profile" onClick={() => setOpen(false)}>{user.name}</Link>
+                <button
+                  type="button"
+                  onClick={() => {
+                    logout();
+                    setOpen(false);
+                  }}
+                >
+                  Sign out
+                </button>
+              </>
+            ) : (
+              <Link to="/login" onClick={() => setOpen(false)}>Sign in</Link>
             )}
           </div>
         </div>

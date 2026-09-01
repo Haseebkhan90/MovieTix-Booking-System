@@ -8,19 +8,21 @@ import { SeatBooking } from './pages/SeatBooking';
 import { MyTickets } from './pages/MyTickets';
 import { Checkout } from './pages/Checkout';
 import { Profile } from './pages/Profile';
+import { Login } from './pages/Login';
+import { Admin } from './pages/Admin';
 import { About, Contact, FAQ, Privacy, Terms } from './pages/InfoPages';
 import { NotFound } from './pages/NotFound';
-import { SeatProvider } from './context/SeatContext';
-import { TicketProvider } from './context/TicketContext';
 import { CityProvider } from './context/CityContext';
+import { AuthProvider } from './context/AuthContext';
 
 function Shell() {
   const { pathname } = useLocation();
-  const hideFooter = pathname.includes('/seats');
+  const hideFooter = pathname.includes('/seats') || pathname.startsWith('/admin') || pathname.startsWith('/login');
+  const hideChrome = pathname.startsWith('/admin');
 
   return (
     <div className="flex min-h-screen flex-col">
-      <Navbar />
+      {!hideChrome && <Navbar />}
       <main className="flex-grow">
         <Routes>
           <Route path="/" element={<HomePage />} />
@@ -29,6 +31,8 @@ function Shell() {
           <Route path="/my-tickets" element={<MyTickets />} />
           <Route path="/checkout" element={<Checkout />} />
           <Route path="/profile" element={<Profile />} />
+          <Route path="/login" element={<Login />} />
+          <Route path="/admin" element={<Admin />} />
           <Route path="/about" element={<About />} />
           <Route path="/contact" element={<Contact />} />
           <Route path="/faq" element={<FAQ />} />
@@ -45,14 +49,12 @@ function Shell() {
 function App() {
   return (
     <Router>
-      <CityProvider>
-        <TicketProvider>
-          <SeatProvider>
-            <ScrollToTop />
-            <Shell />
-          </SeatProvider>
-        </TicketProvider>
-      </CityProvider>
+      <AuthProvider>
+        <CityProvider>
+          <ScrollToTop />
+          <Shell />
+        </CityProvider>
+      </AuthProvider>
     </Router>
   );
 }

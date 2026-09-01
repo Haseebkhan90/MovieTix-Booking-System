@@ -1,9 +1,8 @@
 import React, { FormEvent, useState } from 'react';
 import { CreditCard, Lock } from 'lucide-react';
-import { formatINR } from '../utils/booking';
 
 interface PaymentFormProps {
-  amount: number;
+  amountLabel: string;
   onSuccess: () => void;
   onError: (error: string) => void;
 }
@@ -25,7 +24,7 @@ const luhnCheck = (num: string) => {
   return sum % 10 === 0;
 };
 
-export const PaymentForm: React.FC<PaymentFormProps> = ({ amount, onSuccess, onError }) => {
+export const PaymentForm: React.FC<PaymentFormProps> = ({ amountLabel, onSuccess, onError }) => {
   const [isProcessing, setIsProcessing] = useState(false);
   const [name, setName] = useState('');
   const [cardNumber, setCardNumber] = useState('');
@@ -140,7 +139,7 @@ export const PaymentForm: React.FC<PaymentFormProps> = ({ amount, onSuccess, onE
       </div>
 
       <button type="submit" disabled={isProcessing} className="btn-primary w-full">
-        {isProcessing ? 'Confirming booking…' : `Pay ${formatINR(amount)}`}
+            {isProcessing ? 'Confirming booking…' : `Pay ${amountLabel}`}
       </button>
     </form>
   );

@@ -1,11 +1,14 @@
-import React, { createContext, useCallback, useContext, useMemo, useState } from 'react';
-import { CITIES, City } from '../data/cinemas';
+import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
+import { api } from '../api/client';
+import { CityInfo } from '../types';
 import { CITY_KEY, loadJson, saveJson } from '../utils/storage';
 
-interface CityContextType {
-  city: City;
-  setCity: (city: City) => void;
-}
+type CityContextType = {
+  city: string;
+  cities: CityInfo[];
+  setCity: (city: string) => void;
+  currency: string;
+};
 
 const CityContext = createContext<CityContextType | undefined>(undefined);
 
@@ -16,17 +19,30 @@ export const useCity = () => {
 };
 
 export const CityProvider: React.FC<{ children: React.ReactNode }> = ({ children }) => {
-  const [city, setCityState] = useState<City>(() => {
-    const saved = loadJson<string>(CITY_KEY, 'Mumbai');
-    return (CITIES as readonly string[]).includes(saved) ? (saved as City) : 'Mumbai';
-  });
+  const [cities, setCities] = useState<CityInfo[]>([]);
+  const [city, setCityState] = useState(() => loadJson<string>(CITY_KEY, 'Mumbai'));
 
-  const setCity = useCallback((next: City) => {
+  useEffect(() => {
+    api<{ cities: CityInfo[] }>('/meta')
+      .then((data) => {
+        setCities(data.cities);
+        setCityState((current) => {
+          if (data.cities.some((c) => c.city === current)) return current;
+          const next = data.cities[0]?.city ?? current;
+          saveJson(CITY_KEY, next);
+          return next;
+        });
+      })
+      .catch(() => undefined);
+  }, []);
+
+  const setCity = useCallback((next: string) => {
     setCityState(next);
     saveJson(CITY_KEY, next);
   }, []);
 
-  const value = useMemo(() => ({ city, setCity }), [city, setCity]);
+  const currency = cities.find((c) => c.city === city)?.currency ?? 'INR';
+  const value = useMemo(() => ({ city, cities, setCity, currency }), [city, cities, setCity, currency]);
 
   return <CityContext.Provider value={value}>{children}</CityContext.Provider>;
 };
