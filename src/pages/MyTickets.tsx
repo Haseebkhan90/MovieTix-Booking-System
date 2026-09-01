@@ -3,7 +3,8 @@ import { Link } from 'react-router-dom';
 import { Ticket as TicketIcon } from 'lucide-react';
 import { TicketDetails } from '../components/TicketDetails';
 import { Ticket } from '../types';
-import { api, formatMoney } from '../api/client';
+import { formatMoney } from '../api/client';
+import { fetchTickets } from '../lib/firestore';
 import { useAuth } from '../context/AuthContext';
 
 export const MyTickets = () => {
@@ -13,7 +14,7 @@ export const MyTickets = () => {
 
   useEffect(() => {
     if (!user) return;
-    api<Ticket[]>('/tickets').then(setTickets).catch(() => setTickets([]));
+    fetchTickets().then(setTickets).catch(() => setTickets([]));
   }, [user]);
 
   if (loading) return <div className="py-24 text-center text-zinc-400">Loading…</div>;

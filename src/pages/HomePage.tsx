@@ -2,7 +2,7 @@ import { useEffect, useMemo, useState } from 'react';
 import { useSearchParams } from 'react-router-dom';
 import { MovieCard } from '../components/MovieCard';
 import { HeroBanner } from '../components/HeroBanner';
-import { api } from '../api/client';
+import { fetchMovies } from '../lib/firestore';
 import { Movie } from '../types';
 import { useCity } from '../context/CityContext';
 
@@ -16,13 +16,14 @@ export const HomePage = () => {
   const [error, setError] = useState<string | null>(null);
 
   useEffect(() => {
-    const query = new URLSearchParams({ city });
-    if (q) query.set('search', q);
-    if (genre !== 'All') query.set('genre', genre);
-    if (language !== 'All') query.set('language', language);
-    api<Movie[]>(`/movies?${query}`)
+    fetchMovies({
+      city,
+      search: q || undefined,
+      genre: genre !== 'All' ? genre : undefined,
+      language: language !== 'All' ? language : undefined,
+    })
       .then(setMovies)
-      .catch((err) => setError(err.message));
+      .catch((err) => setError(err instanceof Error ? err.message : 'Could not load movies'));
   }, [city, q, genre, language]);
 
   const genres = useMemo(() => ['All', ...Array.from(new Set(movies.flatMap((m) => m.genre)))], [movies]);
@@ -74,7 +75,7 @@ export const HomePage = () => {
 
         {nowShowing.length === 0 ? (
           <p className="rounded-2xl border border-dashed border-cinema-border p-10 text-center text-zinc-400">
-            {error ? 'API is starting up — run npm run dev from the repo root.' : 'No titles in this city yet. Try another city.'}
+            {error ? 'Firestore is starting up — run npm run dev from the repo root.' : 'No titles in this city yet. Try another city.'}
           </p>
         ) : (
           <div className="grid grid-cols-2 gap-4 md:grid-cols-3 lg:grid-cols-4 lg:gap-6">

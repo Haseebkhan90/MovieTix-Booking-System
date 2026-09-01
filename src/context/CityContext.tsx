@@ -1,5 +1,5 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { api } from '../api/client';
+import { fetchCities } from '../lib/firestore';
 import { CityInfo } from '../types';
 import { CITY_KEY, loadJson, saveJson } from '../utils/storage';
 
@@ -23,14 +23,14 @@ export const CityProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [city, setCityState] = useState(() => loadJson<string>(CITY_KEY, 'Mumbai'));
 
   useEffect(() => {
-    api<{ cities: CityInfo[] }>('/meta')
-      .then((data) => {
-        setCities(data.cities);
+    fetchCities()
+      .then((next) => {
+        setCities(next);
         setCityState((current) => {
-          if (data.cities.some((c) => c.city === current)) return current;
-          const next = data.cities[0]?.city ?? current;
-          saveJson(CITY_KEY, next);
-          return next;
+          if (next.some((c) => c.city === current)) return current;
+          const pick = next[0]?.city ?? current;
+          saveJson(CITY_KEY, pick);
+          return pick;
         });
       })
       .catch(() => undefined);

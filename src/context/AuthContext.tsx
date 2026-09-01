@@ -1,5 +1,15 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
-import { api } from '../api/client';
+import {
+  createUserWithEmailAndPassword,
+  onAuthStateChanged,
+  signInWithEmailAndPassword,
+  signOut,
+  updateProfile,
+} from 'firebase/auth';
+import { doc, getDoc, onSnapshot, setDoc } from 'firebase/firestore';
+import { auth, db } from '../lib/firebase';
+import { profileFromData } from '../lib/firestore';
+import { toApiError } from '../api/client';
 import { AuthUser } from '../types';
 
 type AuthContextType = {
@@ -24,30 +34,77 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
-    api<{ user: AuthUser | null }>('/me')
-      .then((data) => setUser(data.user))
-      .catch(() => setUser(null))
-      .finally(() => setLoading(false));
+    let unsubProfile: (() => void) | undefined;
+    const unsubAuth = onAuthStateChanged(auth, (fbUser) => {
+      unsubProfile?.();
+      if (!fbUser) {
+        setUser(null);
+        setLoading(false);
+        return;
+      }
+      const ref = doc(db, 'users', fbUser.uid);
+      unsubProfile = onSnapshot(
+        ref,
+        (snap) => {
+          if (snap.exists()) setUser(profileFromData(fbUser.uid, snap.data(), fbUser.email));
+          else {
+            setUser({
+              id: fbUser.uid,
+              email: fbUser.email ?? '',
+              name: fbUser.displayName ?? 'Guest',
+              role: 'CUSTOMER',
+              tenantId: null,
+            });
+          }
+          setLoading(false);
+        },
+        () => {
+          setUser({
+            id: fbUser.uid,
+            email: fbUser.email ?? '',
+            name: fbUser.displayName ?? 'Guest',
+            role: 'CUSTOMER',
+            tenantId: null,
+          });
+          setLoading(false);
+        }
+      );
+    });
+    return () => {
+      unsubAuth();
+      unsubProfile?.();
+    };
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
-    const data = await api<{ user: AuthUser }>('/auth/login', {
-      method: 'POST',
-      body: JSON.stringify({ email, password }),
-    });
-    setUser(data.user);
+    try {
+      await signInWithEmailAndPassword(auth, email.trim().toLowerCase(), password);
+    } catch (err) {
+      throw toApiError(err);
+    }
   }, []);
 
   const register = useCallback(async (name: string, email: string, password: string) => {
-    const data = await api<{ user: AuthUser }>('/auth/register', {
-      method: 'POST',
-      body: JSON.stringify({ name, email, password }),
-    });
-    setUser(data.user);
+    try {
+      const cred = await createUserWithEmailAndPassword(auth, email.trim().toLowerCase(), password);
+      await updateProfile(cred.user, { displayName: name.trim() });
+      const existing = await getDoc(doc(db, 'users', cred.user.uid));
+      if (!existing.exists()) {
+        await setDoc(doc(db, 'users', cred.user.uid), {
+          email: email.trim().toLowerCase(),
+          name: name.trim(),
+          role: 'CUSTOMER',
+          tenantId: null,
+          createdAt: Date.now(),
+        });
+      }
+    } catch (err) {
+      throw toApiError(err);
+    }
   }, []);
 
   const logout = useCallback(async () => {
-    await api('/auth/logout', { method: 'POST' });
+    await signOut(auth);
     setUser(null);
   }, []);
 

@@ -1,26 +1,9 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useSearchParams } from 'react-router-dom';
 import { SeatSelector, HallSeat } from '../components/SeatSelector';
-import { api, ApiError, formatMoney } from '../api/client';
-import { HoldSummary } from '../types';
+import { ApiError, formatMoney } from '../api/client';
+import { createHold, fetchShow, listenSeats, type HallSeatRow, type ShowInfo } from '../lib/firestore';
 import { useAuth } from '../context/AuthContext';
-
-type ApiSeat = {
-  id: string;
-  row: string;
-  number: number;
-  category: string;
-  priceMinor: number;
-  status: 'available' | 'sold' | 'held' | 'mine';
-};
-
-type ShowInfo = {
-  id: string;
-  startsAt: string;
-  movie: { id: string; title: string };
-  cinema: { name: string; mall: string; city: string };
-  currency: string;
-};
 
 export const SeatBooking = () => {
   const [params] = useSearchParams();
@@ -28,24 +11,20 @@ export const SeatBooking = () => {
   const navigate = useNavigate();
   const { user } = useAuth();
   const [show, setShow] = useState<ShowInfo | null>(null);
-  const [seats, setSeats] = useState<ApiSeat[]>([]);
+  const [seats, setSeats] = useState<HallSeatRow[]>([]);
   const [selected, setSelected] = useState<string[]>([]);
   const [notice, setNotice] = useState<string | null>(null);
   const [busy, setBusy] = useState(false);
 
   useEffect(() => {
     if (!showId) return;
-    api<ShowInfo>(`/shows/${showId}`).then(setShow).catch(() => setShow(null));
+    fetchShow(showId).then(setShow).catch(() => setShow(null));
   }, [showId]);
 
   useEffect(() => {
-    if (!showId) return;
-    const load = () =>
-      api<{ seats: ApiSeat[] }>(`/shows/${showId}/seats`).then((data) => setSeats(data.seats));
-    load();
-    const t = window.setInterval(load, 8000);
-    return () => window.clearInterval(t);
-  }, [showId]);
+    if (!showId || !show) return;
+    return listenSeats(showId, show.basePriceMinor, user?.id ?? null, setSeats);
+  }, [showId, show, user?.id]);
 
   const selectedSeats = useMemo(() => seats.filter((s) => selected.includes(s.id)), [seats, selected]);
   const subtotal = selectedSeats.reduce((sum, s) => sum + s.priceMinor, 0);
@@ -71,13 +50,10 @@ export const SeatBooking = () => {
     }
     setBusy(true);
     try {
-      const hold = await api<HoldSummary>('/holds', {
-        method: 'POST',
-        body: JSON.stringify({
-          showId,
-          seats: selectedSeats.map((s) => ({ row: s.row, number: s.number })),
-        }),
-      });
+      const hold = await createHold(
+        showId,
+        selectedSeats.map((s) => ({ row: s.row, number: s.number }))
+      );
       sessionStorage.setItem('movietix.hold', JSON.stringify(hold));
       navigate('/checkout');
     } catch (err) {

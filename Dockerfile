@@ -3,7 +3,6 @@ WORKDIR /app
 COPY package.json package-lock.json ./
 RUN npm ci
 COPY . .
-RUN npx prisma generate && npm run build
-ENV NODE_ENV=production PORT=4000
-EXPOSE 4000
-CMD ["sh", "scripts/start.sh"]
+RUN npm run build
+EXPOSE 4173
+CMD ["npx", "vite", "preview", "--host", "0.0.0.0", "--port", "4173"]
