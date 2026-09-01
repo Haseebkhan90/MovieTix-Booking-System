@@ -35,7 +35,40 @@ Test card: `4242 4242 4242 4242`
 
 Cinema dashboard: http://127.0.0.1:5173/admin
 
-## Production (single URL)
+## Deploy for free on Vercel (like a static site)
+
+Vercel cannot keep a SQLite *file*, so production uses **Turso** — free SQLite in the cloud (GitHub login). Hosting stays on Vercel Hobby (free).
+
+### 1. Create a free Turso database (~2 min)
+
+1. Open https://turso.tech → **Sign in with GitHub**
+2. **Create Database** → name `movietix` → region close to you
+3. Copy **LibSQL URL** (`libsql://…turso.io`)
+4. Create a token: dashboard → database → **Tokens** → **Create token** → copy it
+
+### 2. Put secrets on Vercel
+
+Vercel project (this GitHub repo) → **Settings → Environment Variables** → Production:
+
+| Name | Value |
+|---|---|
+| `TURSO_DATABASE_URL` | `libsql://….turso.io` |
+| `TURSO_AUTH_TOKEN` | the token |
+| `JWT_SECRET` | any long random string |
+| `APP_URL` | `https://YOUR-PROJECT.vercel.app` |
+| `NODE_ENV` | `production` |
+
+### 3. Deploy
+
+Push `main` (or merge the Cloud PR). Vercel builds, creates tables, seeds movies, and gives you a public URL.
+
+Same demo logins: `guest@movietix.app` / `Ticket@123`
+
+First load can take ~10s (serverless cold start). After that it feels like a normal Vercel app.
+
+---
+
+## Local production build
 
 ```bash
 npm run db:setup

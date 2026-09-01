@@ -1,8 +1,6 @@
-import { PrismaClient } from '@prisma/client';
+import { prisma } from '../server/db.js';
 import bcrypt from 'bcryptjs';
 import { catalog } from './catalog.js';
-
-const prisma = new PrismaClient();
 
 const TIMES = ['10:00', '13:15', '16:30', '19:45', '22:30'];
 
@@ -25,6 +23,11 @@ const ymd = (date: Date, offsetMinutes: number) => {
 };
 
 async function main() {
+  if (!process.env.FORCE_SEED && (await prisma.movie.count()) > 0) {
+    console.log('Database already seeded — skipping. Set FORCE_SEED=1 to reset.');
+    return;
+  }
+
   await prisma.bookingSeat.deleteMany();
   await prisma.seatHold.deleteMany();
   await prisma.booking.deleteMany();
