@@ -7,7 +7,7 @@ import {
   updateProfile,
 } from 'firebase/auth';
 import { doc, getDoc, onSnapshot, setDoc } from 'firebase/firestore';
-import { auth, db } from '../lib/firebase';
+import { auth, db, hasFirebaseConfig } from '../lib/firebase';
 import { profileFromData } from '../lib/firestore';
 import { toApiError } from '../api/client';
 import { AuthUser } from '../types';
@@ -34,6 +34,11 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [loading, setLoading] = useState(true);
 
   useEffect(() => {
+    if (!hasFirebaseConfig) {
+      setUser(null);
+      setLoading(false);
+      return;
+    }
     let unsubProfile: (() => void) | undefined;
     const unsubAuth = onAuthStateChanged(auth, (fbUser) => {
       unsubProfile?.();
@@ -77,6 +82,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const login = useCallback(async (email: string, password: string) => {
+    if (!hasFirebaseConfig) {
+      throw toApiError({ code: 'auth/invalid-api-key' });
+    }
     try {
       await signInWithEmailAndPassword(auth, email.trim().toLowerCase(), password);
     } catch (err) {
@@ -85,6 +93,9 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const register = useCallback(async (name: string, email: string, password: string) => {
+    if (!hasFirebaseConfig) {
+      throw toApiError({ code: 'auth/invalid-api-key' });
+    }
     try {
       const cred = await createUserWithEmailAndPassword(auth, email.trim().toLowerCase(), password);
       await updateProfile(cred.user, { displayName: name.trim() });
@@ -104,7 +115,7 @@ export const AuthProvider: React.FC<{ children: React.ReactNode }> = ({ children
   }, []);
 
   const logout = useCallback(async () => {
-    await signOut(auth);
+    if (hasFirebaseConfig) await signOut(auth);
     setUser(null);
   }, []);
 

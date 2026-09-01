@@ -14,6 +14,7 @@ import { About, Contact, FAQ, Privacy, Terms } from './pages/InfoPages';
 import { NotFound } from './pages/NotFound';
 import { CityProvider } from './context/CityContext';
 import { AuthProvider } from './context/AuthContext';
+import { FirebaseSetup } from './components/FirebaseSetup';
 
 function Shell() {
   const { pathname } = useLocation();
@@ -22,6 +23,7 @@ function Shell() {
 
   return (
     <div className="flex min-h-screen flex-col">
+      <FirebaseSetup />
       {!hideChrome && <Navbar />}
       <main className="flex-grow">
         <Routes>
