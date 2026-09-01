@@ -1,7 +1,8 @@
 import { useEffect, useState } from 'react';
 import { Link } from 'react-router-dom';
 import { MapPin, Ticket, User } from 'lucide-react';
-import { api, formatMoney } from '../api/client';
+import { formatMoney } from '../api/client';
+import { fetchTickets } from '../lib/firestore';
 import { useAuth } from '../context/AuthContext';
 import { useCity } from '../context/CityContext';
 import { Ticket as TicketType } from '../types';
@@ -13,7 +14,7 @@ export const Profile = () => {
 
   useEffect(() => {
     if (!user) return;
-    api<TicketType[]>('/tickets').then(setTickets).catch(() => setTickets([]));
+    fetchTickets().then(setTickets).catch(() => setTickets([]));
   }, [user]);
 
   if (!user) {

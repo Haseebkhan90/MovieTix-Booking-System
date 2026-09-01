@@ -1,20 +1,19 @@
-# MovieTix Cloud
+# MovieTix
 
-Multi-tenant cinema booking SaaS: customer app + cinema ops dashboard + booking API.
+Cinema booking app (BookMyShow-style) on **Firebase Auth + Cloud Firestore + Firebase Hosting**. No Node API, no SQL. Seats are held in Firestore so two people cannot buy the same seat.
 
-Cities ship with India, UAE, UK, and US inventory. Seats are held in the database (not the browser). Tickets belong to signed-in users.
+## Local demo (no Firebase account)
 
-## You need Node 20+ only
-
-No separate Postgres, Redis, or backend knowledge required. SQLite is the default database so one command runs the whole product.
+Needs Node 20+ and Java 21+ (already used by the Firestore emulator).
 
 ```bash
 npm install
-npm run db:setup
 npm run dev
 ```
 
 Open http://127.0.0.1:5173
+
+That command starts Auth + Firestore emulators, seeds movies/cinemas/shows, then Vite.
 
 ### Demo accounts (password `Ticket@123`)
 
@@ -27,70 +26,57 @@ Open http://127.0.0.1:5173
 Promo: `BOOKNOW10`  
 Test card: `4242 4242 4242 4242`
 
-## What runs
+Cinema dashboard: http://127.0.0.1:5173/admin  
+Emulator UI: http://127.0.0.1:4000
 
-- **Web** Vite/React on `:5173` (proxies `/api` → API)
-- **API** Fastify on `:4000`
-- **DB** SQLite at `data/movietix.db` (Prisma)
+## What you need to send for a live (free) demo
 
-Cinema dashboard: http://127.0.0.1:5173/admin
+1. Open https://console.firebase.google.com and create a project (Spark / free plan is enough).
+2. Build → **Authentication** → Get started → **Email/Password** → Enable.
+3. Build → **Firestore Database** → Create database → start in **production mode** (rules in this repo will be deployed). Pick any region.
+4. Build → **Hosting** → Get started (skip the CLI wizard if you want — we deploy from this repo).
+5. Project settings (gear) → **Your apps** → add a **Web** app. Copy the `firebaseConfig` object.
 
-## Deploy for free on Vercel (like a static site)
+Send these six values (paste as-is):
 
-Vercel cannot keep a SQLite *file*, so production uses **Turso** — free SQLite in the cloud (GitHub login). Hosting stays on Vercel Hobby (free).
-
-### 1. Create a free Turso database (~2 min)
-
-1. Open https://turso.tech → **Sign in with GitHub**
-2. **Create Database** → name `movietix` → region close to you
-3. Copy **LibSQL URL** (`libsql://…turso.io`)
-4. Create a token: dashboard → database → **Tokens** → **Create token** → copy it
-
-### 2. Put secrets on Vercel
-
-Vercel project (this GitHub repo) → **Settings → Environment Variables** → Production:
-
-| Name | Value |
-|---|---|
-| `TURSO_DATABASE_URL` | `libsql://….turso.io` |
-| `TURSO_AUTH_TOKEN` | the token |
-| `JWT_SECRET` | any long random string |
-| `APP_URL` | `https://YOUR-PROJECT.vercel.app` |
-| `NODE_ENV` | `production` |
-
-### 3. Deploy
-
-Push `main` (or merge the Cloud PR). Vercel builds, creates tables, seeds movies, and gives you a public URL.
-
-Same demo logins: `guest@movietix.app` / `Ticket@123`
-
-First load can take ~10s (serverless cold start). After that it feels like a normal Vercel app.
-
----
-
-## Local production build
-
-```bash
-npm run db:setup
-npm run build
-npm start
+```
+VITE_FIREBASE_API_KEY=
+VITE_FIREBASE_AUTH_DOMAIN=
+VITE_FIREBASE_PROJECT_ID=
+VITE_FIREBASE_STORAGE_BUCKET=
+VITE_FIREBASE_MESSAGING_SENDER_ID=
+VITE_FIREBASE_APP_ID=
 ```
 
-Then open http://127.0.0.1:4000 — the API serves the built web app.
+6. Optional, for seeding the real database: Project settings → **Service accounts** → **Generate new private key**. Save the JSON as `serviceAccount.json` (do not commit it) and send it privately.
 
-Docker:
+Then live deploy:
 
 ```bash
-docker build -t movietix .
-docker run -p 4000:4000 -v movietix-data:/app/data movietix
+# put the six VITE_ values in .env.local
+# VITE_USE_EMULATORS=false
+firebase login
+firebase use YOUR_PROJECT_ID
+GOOGLE_APPLICATION_CREDENTIALS=./serviceAccount.json npm run seed
+npm run deploy
 ```
 
-Set `JWT_SECRET` in production. Payments are currently authorized in demo mode after Luhn-valid cards; plug Stripe/Razorpay into `POST /api/checkout` when you have keys.
+Hosting URL will look like `https://YOUR_PROJECT_ID.web.app`.
 
-## API map
+## How data is stored
 
-- `POST /api/auth/register` `POST /api/auth/login` `POST /api/auth/logout` `GET /api/me`
-- `GET /api/meta` `GET /api/movies` `GET /api/movies/:slug/showtimes`
-- `GET /api/shows/:id/seats` `POST /api/holds` `POST /api/checkout`
-- `GET /api/tickets`
-- `GET /api/admin/overview` `GET /api/admin/bookings` `GET /api/admin/shows`
+- `movies/{slug}` catalog
+- `cinemas/{slug}` venues + city/currency
+- `shows/{id}` showtimes (no pre-created seat docs)
+- `shows/{id}/seats/{D-5}` written only when a seat is held or booked
+- `bookings/{id}` confirmed tickets
+- `users/{uid}` profile + role
+- `promoCodes/BOOKNOW10`
+
+Empty seat = available. A deterministic hash marks ~20% of seats as demo-sold so halls look live without 150k documents.
+
+## Security
+
+Firestore rules in `firestore.rules`: catalog is public-read; holds/bookings require Auth; admin queries require `TENANT_ADMIN` or `PLATFORM_ADMIN`.
+
+Spark plan: no Cloud Functions. Checkout runs as a client Firestore transaction.

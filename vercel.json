@@ -1,8 +1,5 @@
 {
-  "buildCommand": "npx prisma generate && npx tsx scripts/ensure-db.ts && npx vite build",
+  "buildCommand": "vite build",
   "outputDirectory": "dist",
-  "framework": null,
-  "rewrites": [
-    { "source": "/((?!api/).*)", "destination": "/index.html" }
-  ]
+  "rewrites": [{ "source": "/(.*)", "destination": "/index.html" }]
 }

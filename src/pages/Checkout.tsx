@@ -1,7 +1,8 @@
 import { useMemo, useState } from 'react';
 import { Link, useNavigate } from 'react-router-dom';
 import { PaymentForm } from '../components/PaymentForm';
-import { api, ApiError, formatMoney } from '../api/client';
+import { ApiError, formatMoney } from '../api/client';
+import { checkoutHold } from '../lib/firestore';
 import { HoldSummary } from '../types';
 
 export const Checkout = () => {
@@ -35,10 +36,7 @@ export const Checkout = () => {
   const pay = async () => {
     if (!hold) return;
     try {
-      await api('/checkout', {
-        method: 'POST',
-        body: JSON.stringify({ holdId: hold.holdId, promoCode: applied ? 'BOOKNOW10' : undefined }),
-      });
+      await checkoutHold(hold.holdId, applied ? 'BOOKNOW10' : undefined);
       sessionStorage.removeItem('movietix.hold');
       setSuccess(true);
       window.setTimeout(() => navigate('/my-tickets'), 1400);

@@ -1,30 +1,10 @@
 import { useEffect, useMemo, useState } from 'react';
 import { Link, useNavigate, useParams } from 'react-router-dom';
 import { Clock, MapPin, Star } from 'lucide-react';
-import { api, formatMoney } from '../api/client';
+import { formatMoney } from '../api/client';
+import { fetchMovie, fetchShowtimes, type CinemaRow } from '../lib/firestore';
 import { Movie } from '../types';
 import { useCity } from '../context/CityContext';
-
-type Showtime = {
-  id: string;
-  startsAt: string;
-  format: string;
-  language: string;
-  screen: string;
-  basePriceMinor: number;
-  currency: string;
-  past: boolean;
-};
-
-type CinemaRow = {
-  id: string;
-  name: string;
-  mall: string;
-  city: string;
-  amenities: string[];
-  currency: string;
-  shows: Showtime[];
-};
 
 const dateKeys = (count = 7) => {
   const out: string[] = [];
@@ -64,16 +44,16 @@ export const MovieDetails = () => {
 
   useEffect(() => {
     if (!id) return;
-    api<Movie>(`/movies/${id}`)
+    fetchMovie(id)
       .then(setMovie)
-      .catch((err) => setError(err.message));
+      .catch((err) => setError(err instanceof Error ? err.message : 'Movie not found'));
   }, [id]);
 
   useEffect(() => {
     if (!id) return;
-    api<{ cinemas: CinemaRow[] }>(`/movies/${id}/showtimes?city=${encodeURIComponent(city)}&date=${dateKey}`)
-      .then((data) => setCinemas(data.cinemas))
-      .catch((err) => setError(err.message));
+    fetchShowtimes(id, city, dateKey)
+      .then(setCinemas)
+      .catch((err) => setError(err instanceof Error ? err.message : 'Could not load showtimes'));
   }, [id, city, dateKey]);
 
   if (error && !movie) {

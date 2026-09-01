@@ -1,59 +1,23 @@
 import { useEffect, useState } from 'react';
 import { Link, Navigate } from 'react-router-dom';
 import { Clapperboard, Film, LayoutDashboard, LogOut, Ticket } from 'lucide-react';
-import { api, formatMoney } from '../api/client';
+import { formatMoney } from '../api/client';
+import { fetchAdminBookings, fetchAdminOverview, fetchAdminShows, type AdminBookingRow, type AdminOverview, type AdminShowRow } from '../lib/firestore';
 import { useAuth } from '../context/AuthContext';
-
-type Overview = {
-  gmvMinor: number;
-  currency: string;
-  bookingsToday: number;
-  upcomingShows: number;
-  cinemas: number;
-};
-
-type BookingRow = {
-  id: string;
-  code: string;
-  customer: string;
-  email: string;
-  movie: string;
-  cinema: string;
-  city: string;
-  startsAt: string;
-  seats: string;
-  totalMinor: number;
-  currency: string;
-  status: string;
-};
-
-type ShowRow = {
-  id: string;
-  movie: string;
-  cinema: string;
-  city: string;
-  screen: string;
-  startsAt: string;
-  format: string;
-  sold: number;
-  capacity: number;
-  basePriceMinor: number;
-  currency: string;
-};
 
 export const Admin = () => {
   const { user, loading, isStaff, logout } = useAuth();
   const [tab, setTab] = useState<'overview' | 'shows' | 'bookings'>('overview');
-  const [overview, setOverview] = useState<Overview | null>(null);
-  const [bookings, setBookings] = useState<BookingRow[]>([]);
-  const [shows, setShows] = useState<ShowRow[]>([]);
+  const [overview, setOverview] = useState<AdminOverview | null>(null);
+  const [bookings, setBookings] = useState<AdminBookingRow[]>([]);
+  const [shows, setShows] = useState<AdminShowRow[]>([]);
 
   useEffect(() => {
-    if (!isStaff) return;
-    api<Overview>('/admin/overview').then(setOverview).catch(() => undefined);
-    api<BookingRow[]>('/admin/bookings').then(setBookings).catch(() => setBookings([]));
-    api<ShowRow[]>('/admin/shows').then(setShows).catch(() => setShows([]));
-  }, [isStaff]);
+    if (!isStaff || !user) return;
+    fetchAdminOverview(user).then(setOverview).catch(() => undefined);
+    fetchAdminBookings(user).then(setBookings).catch(() => setBookings([]));
+    fetchAdminShows(user).then(setShows).catch(() => setShows([]));
+  }, [isStaff, user]);
 
   if (loading) return <div className="py-24 text-center text-zinc-400">Loading…</div>;
   if (!user) return <Navigate to="/login?next=/admin" replace />;
