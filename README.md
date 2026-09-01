@@ -35,6 +35,34 @@ Test card: `4242 4242 4242 4242`
 
 Cinema dashboard: http://127.0.0.1:5173/admin
 
+## Deploy on Railway
+
+1. Open https://railway.com → **Login with GitHub**
+2. **New project** → **Deploy from GitHub repo** → `MovieTix-Booking-System`
+3. Pick branch `main` (merge PR #3 first if it is still open)
+4. Wait for the first deploy. Then open the service → **Settings → Networking → Generate domain**
+5. **Variables** tab → add:
+
+```
+NODE_ENV=production
+JWT_SECRET=any-long-random-string
+DATABASE_URL=file:../data/movietix.db
+APP_URL=https://YOUR-APP.up.railway.app
+```
+
+Replace `APP_URL` with the domain Railway just generated. Save — it will redeploy.
+
+6. **Volumes** → **Add volume** → mount path `/app/data`  
+   (Iske bina tickets sleep/restart pe gayab ho sakti hain.)
+
+Site: `https://YOUR-APP.up.railway.app`  
+Admin: `https://YOUR-APP.up.railway.app/admin`  
+Login: `guest@movietix.app` / `Ticket@123`
+
+Railway new accounts ko trial credit milta hai (~$5). Woh khatam hone ke baad card lagta hai. Turso/Vercel ke muqable yeh “always free” nahi, lekin setup Vercel jaisa simple hai aur Node API yahan sahi chalti hai.
+
+---
+
 ## Deploy for free on Vercel (like a static site)
 
 Vercel cannot keep a SQLite *file*, so production uses **Turso** — free SQLite in the cloud (GitHub login). Hosting stays on Vercel Hobby (free).
