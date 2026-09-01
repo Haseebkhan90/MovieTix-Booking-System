@@ -29,7 +29,11 @@ Test card: `4242 4242 4242 4242`
 Cinema dashboard: http://127.0.0.1:5173/admin  
 Emulator UI: http://127.0.0.1:4000
 
-## What you need to send for a live (free) demo
+## Live site needs a real web API key
+
+A hosted build (Vercel / Firebase Hosting) cannot log in with the dummy emulator key. That shows `auth/api-key-not-valid`. Paste the six `VITE_FIREBASE_*` values into `.env.local` (or the host’s env vars) and rebuild. Local `npm run dev` does not need them.
+
+
 
 1. Open https://console.firebase.google.com and create a project (Spark / free plan is enough).
 2. Build → **Authentication** → Get started → **Email/Password** → Enable.

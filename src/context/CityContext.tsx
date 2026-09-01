@@ -1,5 +1,6 @@
 import React, { createContext, useCallback, useContext, useEffect, useMemo, useState } from 'react';
 import { fetchCities } from '../lib/firestore';
+import { hasFirebaseConfig } from '../lib/firebase';
 import { CityInfo } from '../types';
 import { CITY_KEY, loadJson, saveJson } from '../utils/storage';
 
@@ -23,6 +24,7 @@ export const CityProvider: React.FC<{ children: React.ReactNode }> = ({ children
   const [city, setCityState] = useState(() => loadJson<string>(CITY_KEY, 'Mumbai'));
 
   useEffect(() => {
+    if (!hasFirebaseConfig) return;
     fetchCities()
       .then((next) => {
         setCities(next);

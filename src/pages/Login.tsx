@@ -3,6 +3,7 @@ import { Link, useLocation, useNavigate } from 'react-router-dom';
 import { Film } from 'lucide-react';
 import { useAuth } from '../context/AuthContext';
 import { ApiError } from '../api/client';
+import { hasFirebaseConfig, usingEmulators } from '../lib/firebase';
 
 export const Login = () => {
   const { login, register } = useAuth();
@@ -74,6 +75,15 @@ export const Login = () => {
           <input className="input-field mt-1" type="password" value={password} onChange={(e) => setPassword(e.target.value)} required minLength={8} />
         </label>
         {error && <p className="mb-3 text-sm text-rose-300">{error}</p>}
+        {!hasFirebaseConfig && (
+          <p className="mb-3 text-sm text-amber-200">
+            Live Firebase key nahi mili. Local ke liye <span className="text-white">npm run dev</span> chalao.
+            Hosted site ke liye Firebase console se 6 <span className="text-white">VITE_FIREBASE_*</span> values chahiye.
+          </p>
+        )}
+        {usingEmulators && (
+          <p className="mb-3 text-xs text-zinc-500">Auth emulator: 127.0.0.1:9099</p>
+        )}
         <button className="btn-primary w-full" disabled={busy} type="submit">
           {busy ? 'Please wait…' : mode === 'login' ? 'Continue' : 'Create account'}
         </button>
